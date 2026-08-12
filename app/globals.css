@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+:root {
+  /* Two-tone system. --color-ink plays the role red plays on the
+     reference site: loading screen, footer block, accent line, nav text. */
+  --color-ink: #2e3b31; /* dark green */
+  --color-paper: #ede7dd; /* off-white */
+
+  /* legacy aliases, still referenced by a few utilities */
+  --color-bg-a: var(--color-paper);
+  --color-text-a: var(--color-ink);
+  --color-bg-b: var(--color-ink);
+  --color-text-b: var(--color-paper);
+
+  /* accents */
+  --color-gray: #8a8a8a;
+  --color-lavender: #c4c4d4;
+
+  /* Two eyebrow accents, one per ground — a single accent cannot clear 4.5:1
+     against both halves of the two-tone system.
+       pine-light on ink   = 4.97:1
+       maroon    on paper  = 9.55:1 */
+  --color-pine-light: #9caf88;
+  --color-maroon: #5a2a1f;
+
+  /* Filled-button ground. Darkened from the archive's #8a6a3a so that paper
+     text on it clears 4.5:1 (5.14:1). */
+  --color-brass: #7a5a2c;
+
+  /* Button outline. Warmer and a shade deeper than --color-paper, so the edge
+     still separates from paper-coloured type sitting inside it instead of
+     merging into one block. */
+  --color-bone: #e3dac9;
+}
+
+@theme inline {
+  --font-body: var(--font-body);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+body {
+  font-family: var(--font-body), Arial, Helvetica, sans-serif;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
