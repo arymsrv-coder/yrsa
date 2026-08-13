@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
+import { asset } from "./lib/asset";
 
 // One family across the whole site — the mark carries the character, the type
 // stays neutral behind it.
@@ -25,7 +26,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         {/* The mark is painted through a CSS mask on the very first frame of
             the loading screen, so it has to be in hand before that frame. */}
-        <link rel="preload" as="image" href="/media/logo-yrsa2.png" />
+        <link rel="preload" as="image" href={asset("/media/logo-yrsa2.png")} />
       </head>
       <body className="min-h-full bg-[var(--color-ink)] text-[var(--color-paper)]">
         {children}

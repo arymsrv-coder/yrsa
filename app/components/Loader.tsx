@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import Logo from "./Logo";
 import { useScrollContext } from "../context/ScrollContext";
+import { asset } from "../lib/asset";
 import {
   APERTURE_CLIP,
   APERTURE_TIMES,
@@ -19,12 +20,15 @@ import {
  * exact shot the reel just handed over.
  */
 const REEL = [
-  { src: "/media/reel/01-arizona.jpg", alt: "" },
-  { src: "/media/reel/02-bisbee.jpg", alt: "" },
-  { src: "/media/reel/03-cabot-overlook.jpg", alt: "" },
-  { src: "/media/reel/04-peggys-cove.jpg", alt: "" },
-  { src: "/media/reel/05-cabot-water.jpg", alt: "" },
-  { src: "/media/reel/06-florida.jpg", alt: "" },
+  { src: asset("/media/reel/reel-01.jpg"), alt: "" },
+  { src: asset("/media/reel/reel-02.jpg"), alt: "" },
+  { src: asset("/media/reel/reel-03.jpg"), alt: "" },
+  { src: asset("/media/reel/reel-04.jpg"), alt: "" },
+  { src: asset("/media/reel/reel-05.jpg"), alt: "" },
+  { src: asset("/media/reel/reel-06.jpg"), alt: "" },
+  { src: asset("/media/reel/reel-07.jpg"), alt: "" },
+  { src: asset("/media/reel/reel-08.jpg"), alt: "" },
+  { src: asset("/media/reel/reel-09.jpg"), alt: "" },
 ];
 
 /** The frame is 86vw until it hits its own ceiling. */
@@ -196,7 +200,14 @@ export default function Loader({ onDone }: { onDone: () => void }) {
                     // The first few are needed before lazy loading would get
                     // to them; the rest have seconds of runway.
                     priority={i < 3}
-                    className="object-cover"
+                    // These flash by in under half a second each, so full
+                    // quality is wasted bytes — this trims the payload
+                    // noticeably on the low-end phones this loader runs on.
+                    quality={70}
+                    // Portrait shots in a landscape frame: a centered crop
+                    // drifts into her torso on wide screens. Biasing toward
+                    // the top keeps her face and shoulders in frame instead.
+                    className="object-cover object-top"
                   />
                 </motion.div>
               ))}
@@ -216,8 +227,8 @@ export default function Loader({ onDone }: { onDone: () => void }) {
                 style={{ willChange: "clip-path" }}
               >
                 <video
-                  src="/media/hero.mp4"
-                  poster="/media/hero-poster.jpg"
+                  src={asset("/media/hero.mp4")}
+                  poster={asset("/media/hero-poster.jpg")}
                   autoPlay
                   muted
                   loop

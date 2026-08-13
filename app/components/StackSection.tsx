@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   useMotionValueEvent,
@@ -123,10 +124,15 @@ export default function StackSection({
           className="absolute inset-0 h-full w-full object-cover"
         />
       ) : (
-        <img
+        <Image
           src={poster}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover"
+          fill
+          sizes="100vw"
+          // A portrait shot inside a full-bleed landscape plate — biasing the
+          // crop toward the top keeps her in frame instead of centering on
+          // her torso on wide screens.
+          className="object-cover object-top"
         />
       )}
 

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { EASE_OUT } from "../lib/motion";
 import { useScrollContext } from "../context/ScrollContext";
+import { asset } from "../lib/asset";
 
 /**
  * The opening plate: the footage, corner to corner. No overlay, no tint, no
@@ -61,8 +62,8 @@ export default function Hero({ ready = false }: { ready?: boolean }) {
     <section id="hero" className="sticky top-0 h-dvh w-full overflow-hidden z-0">
       <video
         ref={videoRef}
-        src="/media/hero.mp4"
-        poster="/media/hero-poster.jpg"
+        src={asset("/media/hero.mp4")}
+        poster={asset("/media/hero-poster.jpg")}
         autoPlay
         muted
         loop

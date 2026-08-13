@@ -7,6 +7,7 @@ import Hero from "./components/Hero";
 import Loader from "./components/Loader";
 import StackSection from "./components/StackSection";
 import { ScrollProvider } from "./context/ScrollContext";
+import { asset } from "./lib/asset";
 
 // One plate, arriving on the paper half of the two-tone system over the hero's
 // footage. The page is now the shortest it can be and still have somewhere to
@@ -19,7 +20,7 @@ const sections = [
     index: "01",
     title: "Private archive",
     subtitle: "The private archive",
-    poster: "/media/members.jpg",
+    poster: asset("/media/members.jpg"),
     panel: "paper" as const,
     cta: {
       label: "Continue",

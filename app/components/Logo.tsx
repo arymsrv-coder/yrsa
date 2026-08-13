@@ -1,5 +1,7 @@
 "use client";
 
+import { asset } from "../lib/asset";
+
 /** Intrinsic proportions of the trimmed mark. */
 export const LOGO_RATIO = "1200 / 308";
 
@@ -11,7 +13,7 @@ export const LOGO_RATIO = "1200 / 308";
  * colour. The source is trimmed to the letters and the ~150-alpha shadow band
  * removed, keeping the edge antialiasing above it.
  */
-const LOGO_SRC = "/media/logo-yrsa2.png";
+const LOGO_SRC = asset("/media/logo-yrsa2.png");
 
 /**
  * The YRSA mark, drawn as a mask rather than an image.

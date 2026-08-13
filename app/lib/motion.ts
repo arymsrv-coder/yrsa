@@ -17,7 +17,7 @@ export const EASE_OUT: [number, number, number, number] = [0.19, 1, 0.22, 1];
  * and hero text start revealing the moment this elapses — while the panel is
  * still opening — so content lands well before the aperture has finished.
  */
-export const LOAD_MS = 3400;
+export const LOAD_MS = 4000;
 
 /**
  * The aperture.
