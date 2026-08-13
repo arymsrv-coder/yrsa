@@ -95,18 +95,29 @@ check(
   `${viewports.toFixed(2)} viewports (${geometry.scrollable}px)`,
 );
 
-/** Read the aperture's live mask at a given fraction of total scroll. */
+/**
+ * How far the aperture is open at a given fraction of total scroll, back in the
+ * 50-is-shut / 0-is-open units the component is driven by.
+ *
+ * Read off the top band's scaleY. The panel is four scaled bands rather than a
+ * mask, so the number lives in a transform matrix — `matrix(a, b, c, d, …)`,
+ * where `d` is the vertical scale.
+ */
 async function apertureAt(fraction) {
   return page.evaluate(async (f) => {
     const wrap = document.querySelector(".fixed.inset-0.overflow-y-auto");
-    const target = (wrap.scrollHeight - wrap.clientHeight) * f;
-    wrap.scrollTop = target;
+    wrap.scrollTop = (wrap.scrollHeight - wrap.clientHeight) * f;
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-    const el = [...document.querySelectorAll("div")].find((d) =>
-      (d.style.maskImage || "").includes("linear-gradient"),
-    );
-    const m = (el?.style.maskImage || "").match(/([\d.]+)%/);
-    return m ? parseFloat(m[1]) : null;
+    const band = document.querySelector(".z-20")?.firstElementChild;
+    if (!band) return null;
+    const t = getComputedStyle(band).transform;
+    // A shut panel is `scaleY(1)`, which is the identity transform — the browser
+    // reports that as `none` rather than a matrix.
+    if (t === "none") return 50;
+    const m = t.match(/matrix\(([^)]+)\)/);
+    if (!m) return null;
+    const scaleY = parseFloat(m[1].split(",")[3]);
+    return Math.round(scaleY * 50 * 10) / 10;
   }, fraction);
 }
 
@@ -117,8 +128,8 @@ check("panel is still shut while the plate rides up", early === 50, `mask=${earl
 
 // The documented gesture is "rides up, holds a beat, then is eaten away from the
 // centre". The hold is the part that only exists if the panel is still shut after
-// the plate has already landed — OPEN_AT is 0.451 of the scrub, so 0.44 is inside
-// the beat.
+// the plate has already landed — the plate pins 0.39 of the way along and the
+// opening starts at 0.47, so 0.44 is inside the beat.
 const held = await apertureAt(0.44);
 check("panel still holds shut after the plate lands", held === 50, `mask=${held}`);
 

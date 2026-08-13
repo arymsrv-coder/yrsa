@@ -11,9 +11,41 @@ import { asset } from "../lib/asset";
  * type — the header's mark and a scroll cue at the foot are the only things
  * over it.
  */
-export default function Hero({ ready = false }: { ready?: boolean }) {
+export default function Hero({
+  ready = false,
+  startAt = null,
+}: {
+  ready?: boolean;
+  /**
+   * Where the loading reel's copy of the footage had got to as it handed over.
+   * Null while the loader still owns the screen — which is also what keeps this
+   * video from playing behind it.
+   */
+  startAt?: number | null;
+}) {
   const { containerRef } = useScrollContext();
   const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  // Picks the footage up where the loading reel left it, and only then starts
+  // playing.
+  //
+  // It used to autoplay from page load, alongside the reel's own copy of the same
+  // file — two decoders running the same footage, and worse, running it out of
+  // step. The reel's copy sits inside a fully collapsed clip until its frame
+  // opens, and a video that is clipped to nothing does not count as rendered, so
+  // the browser declines to autoplay it. It only started once its iris opened, by
+  // which point this one had been running for the whole loading sequence. The
+  // hand-off the loader is built around — the frame growing until it *is* the hero
+  // — was landing on a three-and-a-half second jump cut.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || startAt === null) return;
+    // A seek past the end would be rejected; the reel loops, so wrap it.
+    if (Number.isFinite(v.duration) && v.duration > 0) {
+      v.currentTime = startAt % v.duration;
+    }
+    void v.play().catch(() => {});
+  }, [startAt]);
 
   // The video is meant to play with sound, but every browser blocks
   // autoplay-with-audio. Start muted so it always plays, then turn the
@@ -64,7 +96,6 @@ export default function Hero({ ready = false }: { ready?: boolean }) {
         ref={videoRef}
         src={asset("/media/hero.mp4")}
         poster={asset("/media/hero-poster.jpg")}
-        autoPlay
         muted
         loop
         playsInline

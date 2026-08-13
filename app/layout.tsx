@@ -26,7 +26,19 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         {/* The mark is painted through a CSS mask on the very first frame of
             the loading screen, so it has to be in hand before that frame. */}
-        <link rel="preload" as="image" href={asset("/media/logo-yrsa2.png")} />
+        <link
+          rel="preload"
+          as="image"
+          href={asset("/media/logo-yrsa2.png")}
+          // The mark is fetched by a CSS `mask-image`, and a CSS image load is
+          // anonymous. A preload without this defaults to sending credentials,
+          // which is a different request as far as the cache is concerned — the
+          // browser refused to match them ("the request credentials mode does not
+          // match"), downloaded the file twice, and the mask still waited on its
+          // own copy. So the preload was not just wasted, it was doubling the
+          // work it existed to avoid.
+          crossOrigin="anonymous"
+        />
       </head>
       <body className="min-h-full bg-[var(--color-ink)] text-[var(--color-paper)]">
         {children}

@@ -32,6 +32,11 @@ const sections = [
 function HomeContent() {
   const [ready, setReady] = useState(false);
 
+  // Where the loading reel's footage had got to as the panel came away, so the
+  // hero continues it rather than restarting it. Null until the hand-off, which is
+  // also the hero's cue to start playing at all.
+  const [handoffAt, setHandoffAt] = useState<number | null>(null);
+
   const progressValues = useMemo(() => sections.map(() => motionValue(0)), []);
 
   // Every section hides its own text once the *next* one starts arriving. The
@@ -44,13 +49,13 @@ function HomeContent() {
 
   return (
     <>
-      <Loader onDone={() => setReady(true)} />
+      <Loader onDone={() => setReady(true)} onHandoff={setHandoffAt} />
       <Header ready={ready} />
       <main className="relative">
         {/* One stacking context: every child pins at top:0 and the next
             one is painted over it, so earlier pages stay put underneath. */}
         <div className="relative">
-          <Hero ready={ready} />
+          <Hero ready={ready} startAt={handoffAt} />
           {sections.map((s, i) => (
             <StackSection
               key={s.index}

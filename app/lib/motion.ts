@@ -22,20 +22,20 @@ export const LOAD_MS = 4000;
 /**
  * The aperture.
  *
- * Four half-panel gradients — one per edge — are `add`-composited into a single
- * mask. Opposite edges are locked together, so there are only two numbers:
- * `sy` drives the top and bottom bands, `sx` the left and right. At 50/50 the
- * four bands tile the element exactly and it is a solid wall; as the numbers
- * fall each band retreats to its own edge and what is left is a frame that
- * thins to nothing.
+ * Four half-panel bands — one per edge — cover the element between them.
+ * Opposite edges are locked together, so there are only two numbers: `sy` drives
+ * the top and bottom bands, `sx` the left and right. At 50/50 the four bands tile
+ * the element exactly and it is a solid wall; as the numbers fall each band
+ * retreats to its own edge and what is left is a frame that thins to nothing.
  *
  * The two axes are deliberately out of step — horizontal opens further and
  * earlier than vertical — so the hole widens into a letterbox before it opens
  * out. That asymmetry is the whole character of the move; a symmetric version
  * just reads as a growing rectangle.
  *
- * It masks rather than moves, so nothing reflows, and driving the numbers from
- * scroll instead of time plays the entire sequence backwards for free.
+ * The bands are scaled rather than resized, so nothing reflows and nothing
+ * repaints, and driving the numbers from scroll instead of time plays the entire
+ * sequence backwards for free.
  */
 export const APERTURE_SHUT = 50;
 
@@ -68,16 +68,6 @@ export const APERTURE_CLIP = APERTURE_STEPS.x.map(
 );
 
 export const APERTURE_TIMES = [...APERTURE_STEPS.t];
-
-/** Static style companions to the mask — it needs all of these to composite. */
-export const APERTURE_STYLE = {
-  maskRepeat: "no-repeat",
-  maskSize: "100% 100%, 100% 100%, 100% 100%, 100% 100%",
-  maskComposite: "add",
-  WebkitMaskRepeat: "no-repeat",
-  WebkitMaskSize: "100% 100%, 100% 100%, 100% 100%, 100% 100%",
-  WebkitMaskComposite: "source-over",
-} as const;
 
 export const prefersReducedMotion = () =>
   typeof window !== "undefined" &&

@@ -66,13 +66,17 @@ export default function RevealText({
                 const charIndex = charCounter++;
                 return (
                   <span key={charIndex} className="inline-block">
+                    {/* No `will-change` here on purpose. Motion sets it while a
+                        transform is animating and puts it back to `auto` after —
+                        declaring it by hand opts out of that, and on a title it
+                        means one promoted layer per letter, held for the life of
+                        the page. */}
                     <motion.span
                       variants={letterVariants}
                       custom={{ charIndex, duration, stagger, delay, totalChars }}
                       initial="initial"
                       animate={trigger ? "animate" : "exit"}
                       className="inline-block"
-                      style={{ willChange: "transform, opacity" }}
                     >
                       {char}
                     </motion.span>

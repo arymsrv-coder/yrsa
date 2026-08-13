@@ -32,8 +32,16 @@ import { APERTURE_SHUT, APERTURE_STEPS } from "../lib/motion";
  * arrival and the panel comes away against a still frame.
  */
 const RIDE_VH = 1;
-/** The beat between the plate landing and the panel starting to go. */
-const HOLD_VH = 0.15;
+/**
+ * The beat between the plate landing and the panel starting to go.
+ *
+ * It also has to absorb a discrepancy: the track is measured in `svh` and the
+ * plate in `dvh`, so the plate pins slightly later in the scrub when a mobile
+ * browser has hidden its toolbar (0.41 of the way rather than 0.39). The beat has
+ * to be longer than that drift or the panel would begin opening while the plate
+ * was still travelling.
+ */
+const HOLD_VH = 0.25;
 /** Scroll given to the three-stage opening itself. */
 const OPEN_VH = 1.4;
 const TRACK_VH = RIDE_VH + HOLD_VH + OPEN_VH;
@@ -263,7 +271,14 @@ export default function StackSection({
       ref={sectionRef}
       id={id}
       className="relative w-full"
-      style={{ height: `${TRACK_VH * 100}dvh` }}
+      // `svh`, not `dvh`, and this is the one place in the site that wants the
+      // difference. `dvh` tracks the viewport as a mobile browser slides its
+      // toolbar in and out, which is right for the plate — it should always be
+      // full bleed — but wrong for the track, because the track's height *is* the
+      // scroll distance. A toolbar sliding away mid-scroll would relayout the
+      // track, change the total, and jump the scrub the opening is riding on.
+      // `svh` is the toolbar-visible height and never moves.
+      style={{ height: `${TRACK_VH * 100}svh` }}
     >
       <div className="sticky top-0 h-dvh w-full">
         {href ? (
@@ -284,8 +299,8 @@ export default function StackSection({
         <Aperture
           sx={sx}
           sy={sy}
+          color={panelColor}
           className="absolute inset-0 z-20 pointer-events-none"
-          style={{ backgroundColor: panelColor }}
         />
       </div>
     </div>

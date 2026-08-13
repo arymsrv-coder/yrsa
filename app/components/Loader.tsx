@@ -63,7 +63,24 @@ type Zoom = { scale: number; x: number; y: number };
  * behind it. The wordmark and counter fade off as the growth begins so the last
  * thing moving is the footage itself.
  */
-export default function Loader({ onDone }: { onDone: () => void }) {
+export default function Loader({
+  onDone,
+  onHandoff,
+}: {
+  /** The counter has landed — the header and hero type can start revealing. */
+  onDone: () => void;
+  /**
+   * The panel is coming away this frame, so the hero is about to be what the
+   * visitor is looking at. Carries the reel's playback position, which is the
+   * frame the growing footage is on at that instant — the hero picks the footage
+   * up from there rather than starting it over.
+   *
+   * Deliberately a separate moment from `onDone`. The counter lands a full
+   * `ZOOM_S` before the panel unmounts, and a position sampled then is already
+   * stale by the time anyone can see the hero.
+   */
+  onHandoff: (videoTime: number) => void;
+}) {
   const { lenis } = useScrollContext();
   const [count, setCount] = useState(0);
   const [open, setOpen] = useState(true);
@@ -73,7 +90,27 @@ export default function Loader({ onDone }: { onDone: () => void }) {
   // scale is exact for this viewport rather than assumed from the CSS.
   const frameRef = useRef<HTMLDivElement | null>(null);
 
-  const close = useCallback(() => setOpen(false), []);
+  // What the frame has to grow to cover. The panel is `fixed inset-0`, so its own
+  // rect *is* the target — and asking the element rather than the window is what
+  // makes the arithmetic below exact. `window.innerHeight` is not the same number
+  // as the `dvh` the frame is sized in whenever a mobile browser has its toolbar
+  // out, and the frame would stop a little short of the edges, showing a band of
+  // the panel behind it at the instant of hand-off.
+  const panelRef = useRef<HTMLDivElement | null>(null);
+
+
+  // The reel's closing frame. Its playback position is what the hero inherits.
+  const reelVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  const handoffRef = useRef(onHandoff);
+  useEffect(() => {
+    handoffRef.current = onHandoff;
+  }, [onHandoff]);
+
+  const close = useCallback(() => {
+    handoffRef.current(reelVideoRef.current?.currentTime ?? 0);
+    setOpen(false);
+  }, []);
 
   // Held in a ref so the countdown effect never restarts when the parent
   // re-renders with a fresh callback identity.
@@ -98,15 +135,15 @@ export default function Loader({ onDone }: { onDone: () => void }) {
    */
   const measureZoom = useCallback((): Zoom | null => {
     const el = frameRef.current;
-    if (!el) return null;
+    const panel = panelRef.current;
+    if (!el || !panel) return null;
     const r = el.getBoundingClientRect();
-    if (!r.width || !r.height) return null;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    const target = panel.getBoundingClientRect();
+    if (!r.width || !r.height || !target.width || !target.height) return null;
     return {
-      scale: Math.max(vw / r.width, vh / r.height),
-      x: vw / 2 - (r.left + r.width / 2),
-      y: vh / 2 - (r.top + r.height / 2),
+      scale: Math.max(target.width / r.width, target.height / r.height),
+      x: target.left + target.width / 2 - (r.left + r.width / 2),
+      y: target.top + target.height / 2 - (r.top + r.height / 2),
     };
   }, []);
 
@@ -149,6 +186,7 @@ export default function Loader({ onDone }: { onDone: () => void }) {
       {open && (
         <motion.div
           key="loader"
+          ref={panelRef}
           className="fixed inset-0 z-[300] pointer-events-none overflow-hidden"
           style={{ backgroundColor: "var(--color-ink)" }}
         >
@@ -176,7 +214,6 @@ export default function Loader({ onDone }: { onDone: () => void }) {
               onAnimationComplete={() => {
                 if (zoom) close();
               }}
-              style={{ willChange: "transform" }}
             >
               {REEL.map((frame, i) => (
                 <motion.div
@@ -190,7 +227,6 @@ export default function Loader({ onDone }: { onDone: () => void }) {
                     delay: i * STEP,
                   }}
                   className="absolute inset-0"
-                  style={{ willChange: "clip-path" }}
                 >
                   <Image
                     src={frame.src}
@@ -224,9 +260,9 @@ export default function Loader({ onDone }: { onDone: () => void }) {
                   delay: REEL.length * STEP,
                 }}
                 className="absolute inset-0"
-                style={{ willChange: "clip-path" }}
               >
                 <video
+                  ref={reelVideoRef}
                   src={asset("/media/hero.mp4")}
                   poster={asset("/media/hero-poster.jpg")}
                   autoPlay
