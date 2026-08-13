@@ -45,6 +45,14 @@ export function ScrollProvider({ children }: { children: React.ReactNode }) {
       gestureOrientation: "vertical",
       smoothWheel: !reduce,
 
+      // Without this, Lenis leaves touch entirely alone — and `touchMultiplier`
+      // below, along with the per-event cap in `virtualScroll`, silently applies
+      // to nothing on a phone. Every pacing decision in this file was a
+      // desktop-only decision, which is why one thumb flick used to cross a
+      // whole section transition with native momentum while the same move took
+      // several seconds of wheel.
+      syncTouch: !reduce,
+
       // Pace is set in two places, and they do different jobs.
       //
       // `wheelMultiplier` is how far one gesture asks the page to travel. It
@@ -64,7 +72,13 @@ export function ScrollProvider({ children }: { children: React.ReactNode }) {
       lerp: reduce ? 1 : undefined,
 
       wheelMultiplier: reduce ? 1 : 0.15,
-      touchMultiplier: reduce ? 1 : 1.2,
+
+      // 1:1 with the thumb. A drag is direct manipulation — the plate should sit
+      // under the finger that is moving it — so unlike the wheel there is no
+      // room to slow this down without it reading as lag. The pace of the
+      // transition on touch comes from the scroll *distance* the section asks
+      // for instead; see TRACK_VH in StackSection.
+      touchMultiplier: 1,
 
       // Ceiling on how far any single event may throw the page.
       //
@@ -80,6 +94,12 @@ export function ScrollProvider({ children }: { children: React.ReactNode }) {
       // not raw wheel delta. It reads `data` back out after this returns, which
       // is why editing it in place is what reaches the scroller.
       virtualScroll: (data) => {
+        // Wheel only. Now that `syncTouch` routes touch through here too, a cap
+        // would clamp how far a *drag* may travel — the page would fall behind
+        // the thumb mid-gesture and snap forward on release. Only the wheel has
+        // the device-to-device spread this exists to flatten.
+        if (data.event.type !== "wheel") return true;
+
         const cap = window.innerHeight * 0.1;
         data.deltaY = Math.max(-cap, Math.min(cap, data.deltaY));
         return true;
@@ -151,7 +171,10 @@ export function ScrollProvider({ children }: { children: React.ReactNode }) {
       <MotionConfig reducedMotion="user">
         <div
           ref={wrapperRef}
-          className="fixed inset-0 overflow-y-auto overflow-x-hidden no-scrollbar"
+          // `overscroll-none` matters now that `syncTouch` is on: the browser's
+          // own rubber-band at the ends of the scroll would be moving the
+          // container at the same time Lenis is, and the two fight.
+          className="fixed inset-0 overflow-y-auto overflow-x-hidden overscroll-none no-scrollbar"
         >
           <div ref={contentRef} className="relative">
             {children}

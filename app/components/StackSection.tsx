@@ -13,6 +13,36 @@ import { useReducedMotionSafe } from "../lib/useReducedMotionSafe";
 import Aperture from "./Aperture";
 import RevealText from "./RevealText";
 import { useScrollContext } from "../context/ScrollContext";
+import { APERTURE_SHUT, APERTURE_STEPS } from "../lib/motion";
+
+/**
+ * How much scrolling the section asks for, in viewport heights, and how it is
+ * spent.
+ *
+ * This is the pace control for the whole arrival. The transition is scrubbed by
+ * scroll *position*, so its speed is set by distance — not by any duration —
+ * and it used to have exactly one viewport to play across, because a section was
+ * one viewport tall and that was all the travel there was. On a wheel that read
+ * as deliberate, since one notch moves a tenth of a screen. Under a thumb it was
+ * over in a flick.
+ *
+ * `RIDE` is not a free choice: the plate has to cross one screen to arrive, and
+ * the layout fixes that. So the room has to be bought for the part that was
+ * actually being skipped — the opening — which is why the plate now pins on
+ * arrival and the panel comes away against a still frame.
+ */
+const RIDE_VH = 1;
+/** The beat between the plate landing and the panel starting to go. */
+const HOLD_VH = 0.15;
+/** Scroll given to the three-stage opening itself. */
+const OPEN_VH = 1.4;
+const TRACK_VH = RIDE_VH + HOLD_VH + OPEN_VH;
+
+/** Where in the scrub the panel begins to come away. */
+const OPEN_AT = (RIDE_VH + HOLD_VH) / TRACK_VH;
+
+/** Place a fraction of the opening on the section's own 0–1 scrub. */
+const intoOpening = (t: number) => OPEN_AT + t * (1 - OPEN_AT);
 
 /**
  * Each section pins at the top of the viewport and the *next* one arrives over
@@ -60,11 +90,16 @@ export default function StackSection({
   const { containerRef } = useScrollContext();
   const sectionRef = useRef<HTMLDivElement | null>(null);
 
-  // 0 while the section is still below the fold, 1 once it has arrived at the
-  // top of the viewport at full bleed.
+  // 0 while the section is still below the fold, 1 at the far end of its track —
+  // plate landed, panel fully open.
+  //
+  // Measured to the track's *end* rather than its start. `start start` used to be
+  // the same moment as the plate arriving, because the section had no track and
+  // arriving was all it did. Now the plate pins at `start start` and the opening
+  // plays out over the rest, so that is where the scrub begins, not where it ends.
   const { scrollYProgress } = useScroll({
     target: sectionRef,
-    offset: ["start end", "start start"],
+    offset: ["start end", "end end"],
     container: containerRef,
   });
 
@@ -77,8 +112,11 @@ export default function StackSection({
     const recompute = () => {
       const e = scrollYProgress.get();
       const next = nextProgressMV.get();
-      setTitleOn(e > 0.5 && !(next > 0.15));
-      setMetaOn(e > 0.6 && !(next > 0.15));
+      // Expressed against the opening rather than the whole scrub, so the type
+      // still lands at the same point of the reveal it always did — a little
+      // after the hole starts widening, and the rest just behind it.
+      setTitleOn(e > intoOpening(0.29) && !(next > 0.15));
+      setMetaOn(e > intoOpening(0.43) && !(next > 0.15));
     };
     recompute();
     const unsubA = scrollYProgress.on("change", recompute);
@@ -95,17 +133,23 @@ export default function StackSection({
   //
   // Reduced motion pins the panel open, so sections simply stack without the
   // masked reveal riding the scroll.
+  // The stops come straight from APERTURE_STEPS now, remapped onto the part of
+  // the scrub that happens after the plate has landed, with one extra stop in
+  // front holding the panel shut through the ride-up. They used to be written out
+  // by hand and had drifted a little off the shared numbers; deriving them is
+  // what makes "the loader and the scroll are the same animation" literally true.
   const reduce = useReducedMotionSafe();
-  const frames: [number, number, number, number, number] = [0, 0.3, 0.56, 0.72, 1];
+  const frames = [0, ...APERTURE_STEPS.t.map(intoOpening)];
+  const shut = frames.map(() => 0);
   const sx = useTransform(
     scrollYProgress,
     frames,
-    reduce ? [0, 0, 0, 0, 0] : [50, 50, 25, 5, 0],
+    reduce ? shut : [APERTURE_SHUT, ...APERTURE_STEPS.x],
   );
   const sy = useTransform(
     scrollYProgress,
     frames,
-    reduce ? [0, 0, 0, 0, 0] : [50, 50, 35, 35, 0],
+    reduce ? shut : [APERTURE_SHUT, ...APERTURE_STEPS.y],
   );
 
   const panelColor =
@@ -212,28 +256,38 @@ export default function StackSection({
   );
 
   return (
-    <div ref={sectionRef} id={id} className="sticky top-0 h-dvh w-full">
-      {href ? (
-        <a
-          href={href}
-          target={external ? "_blank" : undefined}
-          rel={external ? "noopener noreferrer" : undefined}
-          className="absolute inset-0 block overflow-hidden"
-        >
-          {plate}
-        </a>
-      ) : (
-        <div className="absolute inset-0 overflow-hidden">{plate}</div>
-      )}
+    // The track. It holds no content and is never seen — its only job is to be
+    // tall, so that there is scrolling for the opening to be scrubbed across.
+    // The plate below rides up through it and then pins for the rest of it.
+    <div
+      ref={sectionRef}
+      id={id}
+      className="relative w-full"
+      style={{ height: `${TRACK_VH * 100}dvh` }}
+    >
+      <div className="sticky top-0 h-dvh w-full">
+        {href ? (
+          <a
+            href={href}
+            target={external ? "_blank" : undefined}
+            rel={external ? "noopener noreferrer" : undefined}
+            className="absolute inset-0 block overflow-hidden"
+          >
+            {plate}
+          </a>
+        ) : (
+          <div className="absolute inset-0 overflow-hidden">{plate}</div>
+        )}
 
-      {/* The panel that opens. Sits over the footage and lets clicks through to
-          whatever is underneath. */}
-      <Aperture
-        sx={sx}
-        sy={sy}
-        className="absolute inset-0 z-20 pointer-events-none"
-        style={{ backgroundColor: panelColor }}
-      />
+        {/* The panel that opens. Sits over the footage and lets clicks through to
+            whatever is underneath. */}
+        <Aperture
+          sx={sx}
+          sy={sy}
+          className="absolute inset-0 z-20 pointer-events-none"
+          style={{ backgroundColor: panelColor }}
+        />
+      </div>
     </div>
   );
 }
