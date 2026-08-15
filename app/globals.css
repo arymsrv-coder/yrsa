@@ -57,3 +57,54 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* `dvh` is an invalid value on browsers that predate it (older Android
+   WebViews and in-app-browser engines are the ones that actually show up on
+   this site's low-end-phone audience) — an unsupported value doesn't fall
+   back to anything, the whole declaration is dropped, so every one of these
+   containers was collapsing to zero height/size and taking the loader
+   animation and the section transitions down with it. `vh` isn't pixel-exact
+   once a mobile browser's chrome slides away, but it keeps these elements
+   sized at all, which is what "the animation doesn't appear" actually needs. */
+@supports not (height: 100dvh) {
+  .h-dvh {
+    height: 100vh;
+  }
+  .min-h-dvh {
+    min-height: 100vh;
+  }
+  .h-\[52dvh\] {
+    height: 52vh;
+  }
+  .bottom-\[5dvh\] {
+    bottom: 5vh;
+  }
+  .bottom-\[6dvh\] {
+    bottom: 6vh;
+  }
+  .bottom-\[8dvh\] {
+    bottom: 8vh;
+  }
+  .mt-\[4dvh\] {
+    margin-top: 4vh;
+  }
+  .mt-\[1\.5dvh\] {
+    margin-top: 1.5vh;
+  }
+  .gap-\[4dvh\] {
+    gap: 4vh;
+  }
+}
+
+/* Scroll-track height for StackSection: defaults to `vh` (the value stored in
+   `--track-vh` is unitless) and only upgrades to `svh` where it's supported —
+   see the comment at this class's use site for why a literal `svh` string
+   can't be used here directly. */
+.track-height {
+  height: calc(var(--track-vh) * 1vh);
+}
+@supports (height: 100svh) {
+  .track-height {
+    height: calc(var(--track-vh) * 1svh);
+  }
+}

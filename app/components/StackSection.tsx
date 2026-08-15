@@ -270,7 +270,7 @@ export default function StackSection({
     <div
       ref={sectionRef}
       id={id}
-      className="relative w-full"
+      className="relative w-full track-height"
       // `svh`, not `dvh`, and this is the one place in the site that wants the
       // difference. `dvh` tracks the viewport as a mobile browser slides its
       // toolbar in and out, which is right for the plate — it should always be
@@ -278,7 +278,15 @@ export default function StackSection({
       // scroll distance. A toolbar sliding away mid-scroll would relayout the
       // track, change the total, and jump the scrub the opening is riding on.
       // `svh` is the toolbar-visible height and never moves.
-      style={{ height: `${TRACK_VH * 100}svh` }}
+      //
+      // Set as a custom property rather than a `Xsvh` string: a custom property's
+      // value is never parsed, so it can't be dropped as invalid on browsers that
+      // predate `svh` the way a literal unit would be. `track-height` (globals.css)
+      // reads it back with `vh` as the default unit and upgrades to `svh` only
+      // inside an `@supports` check, so those browsers still get a track sized to
+      // *some* viewport unit instead of collapsing to zero height and taking the
+      // rest of the scroll-scrubbed opening down with it.
+      style={{ "--track-vh": TRACK_VH * 100 } as React.CSSProperties}
     >
       <div className="sticky top-0 h-dvh w-full">
         {href ? (
