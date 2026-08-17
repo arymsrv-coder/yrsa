@@ -75,9 +75,9 @@ export default function Footer({
         yrsaclicks
       </motion.span>
 
-      <div className="flex justify-between items-end font-[family-name:var(--font-body)] uppercase tracking-[0.12em] text-[10px] md:text-[12px]">
+      <div className="flex justify-between items-end py-2 font-[family-name:var(--font-body)] uppercase tracking-[0.12em] text-[10px] md:text-[12px]">
         <span>© 2026 yrsaclicks</span>
-        <HoverRoll href={creditsHref} text="credits" />
+        <HoverRoll href={creditsHref} text="credits" className="py-2" />
       </div>
     </footer>
   );

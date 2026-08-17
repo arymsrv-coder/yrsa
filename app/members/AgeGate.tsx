@@ -112,7 +112,7 @@ function GatePanel({
           of legal age and that viewing is lawful where you are.
         </p>
 
-        <label className="flex items-start gap-3 text-left text-[13px] leading-snug mb-6 cursor-pointer opacity-90">
+        <label className="flex items-start gap-3 py-1.5 text-left text-[13px] leading-snug mb-6 cursor-pointer opacity-90">
           <input
             // Pulls focus into the dialog as it opens.
             autoFocus
@@ -140,7 +140,7 @@ function GatePanel({
         <button
           type="button"
           onClick={onDismiss}
-          className="mt-3 block w-full cursor-pointer py-2 font-[family-name:var(--font-body)] text-[11px] uppercase tracking-[0.2em] opacity-60 transition-opacity duration-200 hover:opacity-100"
+          className="mt-3 block w-full cursor-pointer py-3.5 font-[family-name:var(--font-body)] text-[11px] uppercase tracking-[0.2em] opacity-60 transition-opacity duration-200 hover:opacity-100"
         >
           Not now
         </button>
