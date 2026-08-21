@@ -37,9 +37,11 @@ const RIDE_VH = 1;
  *
  * It also has to absorb a discrepancy: the track is measured in `svh` and the
  * plate in `dvh`, so the plate pins slightly later in the scrub when a mobile
- * browser has hidden its toolbar (0.41 of the way rather than 0.39). The beat has
- * to be longer than that drift or the panel would begin opening while the plate
- * was still travelling.
+ * browser has hidden its toolbar — 0.49 of the way along with the toolbar out,
+ * a couple of points further without it, against an opening that starts at 0.56.
+ * The beat has to be longer than that drift or the panel would begin opening
+ * while the plate was still travelling. `tests/scroll-pacing.mjs` measures both
+ * points and checks they are still in that order.
  */
 const HOLD_VH = 0.15;
 /** Scroll given to the three-stage opening itself. */

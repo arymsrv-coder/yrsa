@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 /* z-index scale: 150 nav header, 250 age-gate overlay, 260 members header
-   (above the gate), 300 boot loader (above everything). Keep new fixed/sticky
-   layers on this scale instead of picking an arbitrary number. */
+   (above the gate), 270 members arrival veil, 300 boot loader (above
+   everything). Keep new fixed/sticky layers on this scale instead of picking an
+   arbitrary number. */
 
 :root {
   /* Two-tone system. --color-ink plays the role red plays on the
@@ -110,5 +111,105 @@ body {
 @supports (height: 100svh) {
   .track-height {
     height: calc(var(--track-vh) * 1svh);
+  }
+}
+
+/* The arrival on /members.
+ *
+ * Two halves of one gesture: an ink veil over the route that clears, and the
+ * plate underneath settling out of a slight over-scale as it does. Together
+ * they turn following "Continue" from the landing page into a dissolve into the
+ * still that was just tapped rather than a cut to a new document.
+ *
+ * Written as keyframes rather than as motion components on purpose. Both start
+ * from a state that hides the page — the veil opaque, the plate at zero — and
+ * on the browsers that actually matter here (Instagram's in-app webview on a
+ * low-end phone) anything waiting on hydration to undo that would hold a blank
+ * screen for as long as the JavaScript takes to land. CSS animations run off
+ * the first paint, script or no script.
+ *
+ * The curve is EASE from lib/motion, spelled out because CSS cannot import it.
+ */
+@keyframes arrival-veil-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes plate-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes plate-arrive {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.arrival-veil {
+  animation: arrival-veil-out 700ms cubic-bezier(0.83, 0, 0.17, 1) forwards;
+}
+
+.plate-arrive {
+  animation: plate-arrive 1200ms cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  /* The scale is the only transform on this element, and the still under it is
+     a full-bleed photograph — worth promoting so the settle does not repaint
+     the frame every step of the way. */
+  will-change: opacity, transform;
+}
+
+/* Reduced motion keeps the dissolve — a cross-fade is what the preference is
+   least likely to be asking about — and drops the scale, which is the part that
+   actually moves. */
+@media (prefers-reduced-motion: reduce) {
+  .arrival-veil {
+    animation-duration: 300ms;
+  }
+
+  .plate-arrive {
+    animation: plate-fade-in 300ms linear forwards;
+  }
+}
+
+/* The age gate's veil, over /members.
+ *
+ * Ink at a little over a third with a blur under it, rather than the
+ * near-opaque wash that used to sit here: the plate stays legible as the
+ * photograph the page is about, the panel over it stays legible as type, and
+ * the two read as one screen instead of two.
+ *
+ * In CSS rather than inline on the element for the sake of the fallback below —
+ * `@supports` is not something a style attribute can express.
+ */
+.gate-veil {
+  background-color: color-mix(in srgb, var(--color-ink) 38%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+/* Without the blur, the opacity is carrying the gate on its own — and a third
+ * of a wash over a full-bleed still leaves the still very nearly readable,
+ * which is the one thing a gate that has not been passed yet must not do. So
+ * where `backdrop-filter` is missing the ink goes back up to where it was.
+ * Old Android WebViews are exactly the case: on this site's actual audience
+ * that is Instagram's in-app browser on a cheap phone. */
+@supports not (
+  (backdrop-filter: blur(6px)) or (-webkit-backdrop-filter: blur(6px))
+) {
+  .gate-veil {
+    background-color: color-mix(in srgb, var(--color-ink) 92%, transparent);
   }
 }

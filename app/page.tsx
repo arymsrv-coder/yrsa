@@ -9,9 +9,15 @@ import StackSection from "./components/StackSection";
 import { ScrollProvider } from "./context/ScrollContext";
 import { asset } from "./lib/asset";
 
-// One plate, arriving on the paper half of the two-tone system over the hero's
+// One plate, arriving on the ink half of the two-tone system over the hero's
 // footage. The page is now the shortest it can be and still have somewhere to
 // go: the footage, then the way in.
+//
+// The panel used to be paper, which meant the one solid sheet the visitor sees
+// on the way in was off-white — the only place on the site where the ground was
+// not the brand green. Ink puts the arrival on the same green as the loading
+// screen it followed, and the header's `mix-blend-difference` mark inverts to
+// pale over it without needing anything said here.
 const sections = [
   {
     // Explicit, not derived from the title — the title is two words now, and
@@ -21,7 +27,7 @@ const sections = [
     title: "Private archive",
     subtitle: "The private archive",
     poster: asset("/media/members.jpg"),
-    panel: "paper" as const,
+    panel: "ink" as const,
     cta: {
       label: "Continue",
       href: "/members",

@@ -121,20 +121,92 @@ async function apertureAt(fraction) {
   }, fraction);
 }
 
+/**
+ * The fraction of the scroll at which the plate stops riding and pins.
+ *
+ * Read off the DOM rather than derived from the pacing constants: the track's
+ * top reaching the top of the viewport is the moment its sticky child stops
+ * moving, whatever the constants happen to say.
+ */
+async function plateLandsAt() {
+  return page.evaluate(() => {
+    const wrap = document.querySelector(".fixed.inset-0.overflow-y-auto");
+    const max = wrap.scrollHeight - wrap.clientHeight;
+    const track = document.querySelector(".track-height");
+    const STEPS = 500;
+    for (let i = 0; i <= STEPS; i++) {
+      wrap.scrollTop = (max * i) / STEPS;
+      // Sticky offset is layout, not animation, so it is settled by the time
+      // the rect can be read — no frame to wait for.
+      if (track.getBoundingClientRect().top <= 0.5) return i / STEPS;
+    }
+    return 1;
+  });
+}
+
+/**
+ * The fraction at which the mask first comes off its stop.
+ *
+ * Swept inside the page so the whole scan is one round trip. Starts at 0.3
+ * because nothing can have opened before the plate has crossed a screen.
+ */
+async function panelOpensAt() {
+  return page.evaluate(async () => {
+    const wrap = document.querySelector(".fixed.inset-0.overflow-y-auto");
+    const max = wrap.scrollHeight - wrap.clientHeight;
+    const band = document.querySelector(".z-20")?.firstElementChild;
+    if (!band) return null;
+    const STEPS = 140;
+    for (let i = 0; i <= STEPS; i++) {
+      const f = 0.3 + (0.7 * i) / STEPS;
+      wrap.scrollTop = max * f;
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      const t = getComputedStyle(band).transform;
+      if (t === "none") continue;
+      const m = t.match(/matrix\(([^)]+)\)/);
+      if (m && parseFloat(m[1].split(",")[3]) * 50 < 49.9) return f;
+    }
+    return 1;
+  });
+}
+
 // 50 is a shut panel, 0 is fully retracted. The plate spends the first stretch
 // riding up behind a solid panel, so the mask must still be closed there.
 const early = await apertureAt(0.2);
 check("panel is still shut while the plate rides up", early === 50, `mask=${early}`);
 
 // The documented gesture is "rides up, holds a beat, then is eaten away from the
-// centre". The hold is the part that only exists if the panel is still shut after
-// the plate has already landed — the plate pins 0.39 of the way along and the
-// opening starts at 0.47, so 0.44 is inside the beat.
-const held = await apertureAt(0.44);
-check("panel still holds shut after the plate lands", held === 50, `mask=${held}`);
+// centre". The beat is the part that only exists if the panel is still shut once
+// the plate has *already* landed, so both points are measured rather than named.
+// A hard-coded fraction cannot express this: the landing and the opening are both
+// fractions of the track, so shortening the track slides them together and past
+// any number written down here, leaving the check quietly passing on the ride-up
+// instead of on the hold.
+const lands = await plateLandsAt();
+const opens = await panelOpensAt();
 
-// Partway open, not snapped: the letterbox stage.
-const mid = await apertureAt(0.72);
+check(
+  "the panel starts opening only after the plate has landed",
+  opens > lands,
+  `plate lands at ${lands.toFixed(3)}, opening starts at ${opens.toFixed(3)}`,
+);
+
+// And the beat has to be worth something. It also has to absorb the svh/dvh
+// discrepancy documented on HOLD_VH in StackSection — the plate pins later in the
+// scrub when a mobile browser hides its toolbar, and this run has no toolbar to
+// hide — so a hold measured in single percent would not survive a real phone.
+const holdVh = (opens - lands) * viewports;
+check(
+  "the hold is a beat and not a frame",
+  holdVh > 0.1,
+  `${holdVh.toFixed(3)} viewports of scroll between landing and opening`,
+);
+
+const held = await apertureAt(lands + (opens - lands) / 2);
+check("panel still holds shut inside the beat", held === 50, `mask=${held}`);
+
+// Partway open, not snapped: the letterbox stage, halfway through the opening.
+const mid = await apertureAt(opens + (1 - opens) / 2);
 check("panel is partway open mid-scrub", mid > 0 && mid < 50, `mask=${mid}`);
 
 const end = await apertureAt(1);
