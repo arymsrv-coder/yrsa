@@ -127,12 +127,15 @@ export default function HoverRoll({
     onBlur: () => setHovered(false),
   };
 
+  const focusRing =
+    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current";
+
   if (as === "button") {
     return (
       <button
         type="button"
         onClick={onClick}
-        className={`relative isolate inline-block cursor-pointer ${className}`}
+        className={`relative isolate inline-block cursor-pointer ${focusRing} ${className}`}
         style={style}
         {...handlers}
       >
@@ -155,7 +158,7 @@ export default function HoverRoll({
       onClick={onClick}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      className={`relative isolate inline-block cursor-pointer ${className}`}
+      className={`relative isolate inline-block cursor-pointer ${focusRing} ${className}`}
       style={style}
       {...handlers}
     >

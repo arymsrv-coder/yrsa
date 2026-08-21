@@ -74,8 +74,15 @@ function GatePanel({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.45, ease: EASE }}
+      // Near-opaque ink used to sit here, which made the plate behind the gate
+      // invisible and the confirmation feel like it belonged to a different
+      // page. Held back to a little over half instead, with a blur doing the
+      // work the opacity used to: she stays legible as an image, the panel
+      // below stays legible as type, and the two read as one screen.
       style={{
-        backgroundColor: "color-mix(in srgb, var(--color-ink) 96%, transparent)",
+        backgroundColor: "color-mix(in srgb, var(--color-ink) 38%, transparent)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
       }}
       role="dialog"
       aria-modal="true"
@@ -91,7 +98,8 @@ function GatePanel({
         style={{
           borderColor:
             "color-mix(in srgb, var(--color-paper) 32%, transparent)",
-          backgroundColor: "var(--color-ink)",
+          backgroundColor:
+            "color-mix(in srgb, var(--color-ink) 97%, transparent)",
           color: "var(--color-paper)",
         }}
       >
@@ -112,7 +120,7 @@ function GatePanel({
           of legal age and that viewing is lawful where you are.
         </p>
 
-        <label className="flex items-start gap-3 text-left text-[13px] leading-snug mb-6 cursor-pointer opacity-90">
+        <label className="flex items-start gap-3 py-1.5 text-left text-[13px] leading-snug mb-6 cursor-pointer opacity-90">
           <input
             // Pulls focus into the dialog as it opens.
             autoFocus
@@ -140,7 +148,7 @@ function GatePanel({
         <button
           type="button"
           onClick={onDismiss}
-          className="mt-3 block w-full cursor-pointer py-2 font-[family-name:var(--font-body)] text-[11px] uppercase tracking-[0.2em] opacity-60 transition-opacity duration-200 hover:opacity-100"
+          className="mt-3 block w-full cursor-pointer py-3.5 font-[family-name:var(--font-body)] text-[11px] uppercase tracking-[0.2em] opacity-60 transition-opacity duration-200 hover:opacity-100"
         >
           Not now
         </button>

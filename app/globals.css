@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* z-index scale: 150 nav header, 250 age-gate overlay, 260 members header
+   (above the gate), 300 boot loader (above everything). Keep new fixed/sticky
+   layers on this scale instead of picking an arbitrary number. */
+
 :root {
   /* Two-tone system. --color-ink plays the role red plays on the
      reference site: loading screen, footer block, accent line, nav text. */
