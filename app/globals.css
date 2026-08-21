@@ -183,3 +183,33 @@ body {
     animation: plate-fade-in 300ms linear forwards;
   }
 }
+
+/* The age gate's veil, over /members.
+ *
+ * Ink at a little over a third with a blur under it, rather than the
+ * near-opaque wash that used to sit here: the plate stays legible as the
+ * photograph the page is about, the panel over it stays legible as type, and
+ * the two read as one screen instead of two.
+ *
+ * In CSS rather than inline on the element for the sake of the fallback below —
+ * `@supports` is not something a style attribute can express.
+ */
+.gate-veil {
+  background-color: color-mix(in srgb, var(--color-ink) 38%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+/* Without the blur, the opacity is carrying the gate on its own — and a third
+ * of a wash over a full-bleed still leaves the still very nearly readable,
+ * which is the one thing a gate that has not been passed yet must not do. So
+ * where `backdrop-filter` is missing the ink goes back up to where it was.
+ * Old Android WebViews are exactly the case: on this site's actual audience
+ * that is Instagram's in-app browser on a cheap phone. */
+@supports not (
+  (backdrop-filter: blur(6px)) or (-webkit-backdrop-filter: blur(6px))
+) {
+  .gate-veil {
+    background-color: color-mix(in srgb, var(--color-ink) 92%, transparent);
+  }
+}
