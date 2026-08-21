@@ -74,8 +74,15 @@ function GatePanel({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.45, ease: EASE }}
+      // Near-opaque ink used to sit here, which made the plate behind the gate
+      // invisible and the confirmation feel like it belonged to a different
+      // page. Held back to a little over half instead, with a blur doing the
+      // work the opacity used to: she stays legible as an image, the panel
+      // below stays legible as type, and the two read as one screen.
       style={{
-        backgroundColor: "color-mix(in srgb, var(--color-ink) 96%, transparent)",
+        backgroundColor: "color-mix(in srgb, var(--color-ink) 38%, transparent)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
       }}
       role="dialog"
       aria-modal="true"
@@ -91,7 +98,8 @@ function GatePanel({
         style={{
           borderColor:
             "color-mix(in srgb, var(--color-paper) 32%, transparent)",
-          backgroundColor: "var(--color-ink)",
+          backgroundColor:
+            "color-mix(in srgb, var(--color-ink) 97%, transparent)",
           color: "var(--color-paper)",
         }}
       >
