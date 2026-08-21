@@ -41,9 +41,9 @@ const RIDE_VH = 1;
  * to be longer than that drift or the panel would begin opening while the plate
  * was still travelling.
  */
-const HOLD_VH = 0.25;
+const HOLD_VH = 0.15;
 /** Scroll given to the three-stage opening itself. */
-const OPEN_VH = 1.4;
+const OPEN_VH = 0.9;
 const TRACK_VH = RIDE_VH + HOLD_VH + OPEN_VH;
 
 /** Where in the scrub the panel begins to come away. */
