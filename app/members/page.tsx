@@ -65,15 +65,21 @@ export default function MembersPage() {
       className="relative min-h-dvh w-full overflow-hidden"
       style={{ backgroundColor: "var(--color-ink)", color: "var(--color-paper)" }}
     >
-      {/* The plate. Held at full strength and only lightly knocked back, so she
-          reads as the subject of the page rather than a texture behind it — the
-          contrast the copy needs is bought by the scrim below instead, which is
-          local to the text rather than flattening the whole frame.
+      {/* The plate. Held at full strength and barely veiled at all, so she reads
+          as the photograph this page is about rather than a texture behind it.
+          The green wash that used to sit here — a flat ink dim plus a gradient
+          scrim weighted over the lower two thirds — is gone; the contrast the
+          copy needs is bought locally now, by the shadows on the type itself,
+          rather than by tinting the whole frame.
+
+          It arrives with a short rise: the plate settles out of a slight
+          over-scale as the veil below clears, so following "Continue" from the
+          landing page reads as walking into the still that was just tapped.
 
           `object-position` is biased upward because this is a portrait still in
           a landscape viewport: a centred crop puts the fold of her jeans in the
           middle of a desktop screen and takes her face off the top of it. */}
-      <div className="absolute inset-0 z-0">
+      <div className="plate-arrive absolute inset-0 z-0">
         <Image
           src={asset("/media/members.jpg")}
           alt=""
@@ -89,34 +95,13 @@ export default function MembersPage() {
           draggable={false}
         />
 
-        {/* The dim. One flat wash, deliberately light — this is the 15–20% the
-            plate is knocked back by, and nothing more. */}
+        {/* The veil. Two per cent, and neutral rather than ink — enough to take
+            the very top off the highlights, not enough to read as a layer, and
+            with no green in it at all. Everything the type needs to stay
+            readable over a pale plate now comes from its own text shadows. */}
         <div
           className="absolute inset-0"
-          style={{
-            backgroundColor:
-              "color-mix(in srgb, var(--color-ink) 18%, transparent)",
-          }}
-        />
-
-        {/* The scrim, and the reason the dim above can stay this light. Type
-            over a photograph is a contrast problem wherever the photograph
-            happens to be pale, and this one is pale exactly where the copy
-            sits. Weighting the wash toward the lower two thirds gives the text
-            a dark ground to stand on while leaving her face and shoulders in
-            the clear. */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(180deg," +
-              " color-mix(in srgb, var(--color-ink) 48%, transparent) 0%," +
-              " color-mix(in srgb, var(--color-ink) 14%, transparent) 24%," +
-              " color-mix(in srgb, var(--color-ink) 58%, transparent) 46%," +
-              " color-mix(in srgb, var(--color-ink) 84%, transparent) 62%," +
-              " color-mix(in srgb, var(--color-ink) 88%, transparent) 84%," +
-              " color-mix(in srgb, var(--color-ink) 78%, transparent) 100%)",
-          }}
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.02)" }}
         />
       </div>
 
@@ -129,6 +114,9 @@ export default function MembersPage() {
           href="/"
           aria-label="yrsaclicks — back to the landing page"
           className="block cursor-pointer transition-opacity duration-200 hover:opacity-60"
+          // The gradient this sat on top of is gone, so the mark carries its own
+          // separation from whatever part of the plate ends up behind it.
+          style={{ filter: "drop-shadow(0 1px 10px rgba(0,0,0,0.55))" }}
         >
           <Logo className="w-[130px] md:w-[180px]" />
         </Link>
@@ -145,15 +133,31 @@ export default function MembersPage() {
           transition={{ duration: 0.8, ease: EASE, delay: verified ? 0.25 : 0 }}
           className="flex flex-col items-center"
         >
+          {/* Every string on this page carries its own contrast now that the
+              scrim is gone: a tight shadow to hold the letterforms apart from
+              whatever is directly under them, and a wide soft one to sink the
+              patch of photograph they sit on.
+
+              Paper rather than the pine-light eyebrow the rest of the site
+              uses. That accent is specified against ink, and there is no ink
+              behind it here any more — a pale sage at 11px over a pale wall is
+              a label you have to hunt for. */}
           <p
             className="font-[family-name:var(--font-body)] text-[11px] uppercase tracking-[0.28em] mb-5"
-            style={{ color: "var(--color-pine-light)" }}
+            style={{
+              color: "var(--color-paper)",
+              textShadow:
+                "0 1px 2px rgba(0,0,0,0.7), 0 1px 16px rgba(0,0,0,0.65)",
+            }}
           >
             Members
           </p>
           <h1
             className="font-[family-name:var(--font-body)] font-extrabold uppercase text-[13vw] md:text-[7vw] leading-[0.9] tracking-[-0.02em]"
-            style={{ textShadow: "0 2px 28px rgba(0,0,0,0.45)" }}
+            style={{
+              textShadow:
+                "0 1px 3px rgba(0,0,0,0.55), 0 2px 30px rgba(0,0,0,0.7)",
+            }}
           >
             Private archive
           </h1>
@@ -178,8 +182,11 @@ export default function MembersPage() {
 
               {/* Demoted to a note: it is what is coming, not what is here. */}
               <p
-                className="mt-7 max-w-sm font-[family-name:var(--font-body)] text-[12px] md:text-[13px] leading-relaxed opacity-85"
-                style={{ textShadow: "0 1px 12px rgba(0,0,0,0.55)" }}
+                className="mt-7 max-w-sm font-[family-name:var(--font-body)] text-[12px] md:text-[13px] leading-relaxed"
+                style={{
+                  textShadow:
+                    "0 1px 2px rgba(0,0,0,0.85), 0 0 6px rgba(0,0,0,0.75), 0 2px 18px rgba(0,0,0,0.7)",
+                }}
               >
                 The archive here is still being prepared — unreleased sets,
                 uncut film and the frames that never make the public page.
@@ -190,7 +197,8 @@ export default function MembersPage() {
                 className="mt-8 inline-block cursor-pointer font-[family-name:var(--font-body)] text-[11px] uppercase tracking-[0.2em] opacity-80 transition-opacity duration-200 hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"
                 style={{
                   outlineColor: "var(--color-paper)",
-                  textShadow: "0 1px 12px rgba(0,0,0,0.55)",
+                  textShadow:
+                    "0 1px 2px rgba(0,0,0,0.6), 0 1px 14px rgba(0,0,0,0.7)",
                 }}
               >
                 Back to yrsaclicks
@@ -198,7 +206,13 @@ export default function MembersPage() {
             </>
           ) : (
             <>
-              <p className="mt-6 max-w-md font-[family-name:var(--font-body)] text-[13px] md:text-[15px] leading-relaxed opacity-70">
+              <p
+                className="mt-6 max-w-md font-[family-name:var(--font-body)] text-[13px] md:text-[15px] leading-relaxed"
+                style={{
+                  textShadow:
+                    "0 1px 2px rgba(0,0,0,0.85), 0 0 6px rgba(0,0,0,0.75), 0 2px 18px rgba(0,0,0,0.7)",
+                }}
+              >
                 Being prepared. Unreleased sets, uncut film and the frames that
                 never make the public page — opening soon.
               </p>
@@ -215,6 +229,22 @@ export default function MembersPage() {
       </div>
 
       <AgeGate open={!verified} onConfirm={onConfirm} onDismiss={onDismiss} />
+
+      {/* The arrival. One ink veil over the whole route that clears itself the
+          moment the first paint lands, so pressing "Continue" on the landing
+          page dissolves into this one instead of cutting to it.
+
+          Deliberately a CSS animation and not a motion component: the veil
+          starts opaque, and on this site's actual audience — Instagram's in-app
+          browser on a cheap phone — waiting for hydration to clear it would
+          mean holding a solid green screen for however long the JavaScript
+          takes. Keyframes run off the paint, whether that script arrives or
+          not. */}
+      <div
+        aria-hidden="true"
+        className="arrival-veil pointer-events-none fixed inset-0 z-[270]"
+        style={{ backgroundColor: "var(--color-ink)" }}
+      />
     </main>
   );
 }
