@@ -312,3 +312,45 @@ visible rather than silent — a misfiled video looks wrong in its tile.
 The full browsable archive; playlists; a search or filter over the rows;
 comments; subscriber counts; anything that keeps state about what a visitor has
 watched.
+
+---
+
+## Amendment — the rows moved onto the landing page
+
+Status: superseded in placement, unchanged in everything else.
+
+The design above put the rows on a `/watch` route reached from the landing
+page's second plate. That plate has been removed and the rows now sit in its
+place, as an ordinary scrolling section at the end of the stack
+(`app/components/ChannelSection.tsx`). The route is gone.
+
+**Why.** The plate was a full-bleed photograph whose whole job was to advertise
+a page — and the page it advertised was the thing worth seeing. Publicly
+watchable work does not need a door in front of it. The archive above stays a
+plate because what is behind *it* is paid, so a photograph and an invitation is
+all the page can honestly show.
+
+**What the move cost, and how each was paid.**
+
+| Problem | Resolution |
+|---|---|
+| The rows now live inside Lenis, which claims wheel and touch page-wide — a sideways gesture over a row scrolled the page instead | `data-lenis-prevent` on each scroller. Asserted by a test, since it is invisible until someone tries it on a trackpad. |
+| The player held the page still with `body { overflow: hidden }`, which Lenis ignores — it runs its own RAF loop against its own wrapper | `Player` also calls `lenis.stop()`/`start()`, via `useOptionalLenis`, which returns null instead of throwing for any future standalone use. |
+| The fixed, centred wordmark landed on a centred "Watch" heading, at rest, at every viewport | The section's heading is ranged left. Padding could not fix this: the page comes to rest with the section's top off-screen. |
+
+**The empty state is gone**, and with it the reasoning in "The channel is
+empty" above. The channel still has no uploads — verified again at the time of
+this amendment: the Atom feed, the videos tab, the Shorts tab and the streams
+tab all report zero. The section instead ships twelve stand-in tiles per row,
+cut from photographs in `Content/`, carrying a `placeholder: true` flag.
+
+That flag is what keeps this from being a lie the page tells. A stand-in tile
+is an anchor to the channel, not a button that opens a player — there is no
+video behind it, and an embed would announce that in YouTube's words. The
+titles and durations are invented, and they will be read as real. That is the
+known cost of the decision, taken deliberately: the alternative was a section
+that reads as an apology.
+
+The first build that finds real uploads replaces the whole snapshot and the
+stand-ins disappear on their own. Their files (`standin-*.jpg`) can be deleted
+then.

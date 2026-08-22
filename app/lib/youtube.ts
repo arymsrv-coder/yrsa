@@ -9,11 +9,25 @@ export type Clip = {
   seconds: number | null;
   /** A `public/` path. Pass through `asset()` before it reaches the DOM. */
   thumb: string;
+  /**
+   * A stand-in, not an upload.
+   *
+   * The channel had nothing on it when these rows were built, and a section
+   * that renders as a paragraph of apology is a worse answer than one that
+   * shows the shape of the thing. So the snapshot ships hand-made tiles cut
+   * from her own photographs — and this flag is how the row knows not to treat
+   * them as playable. A stand-in tile opens the channel; it never mounts a
+   * player, because there is no video behind it and an embed would say so in
+   * YouTube's words rather than ours.
+   */
+  placeholder?: boolean;
 };
 
 export type Snapshot = {
   /** When the snapshot was last refreshed, or null if it never has been. */
   fetchedAt: string | null;
+  /** True while every clip in the snapshot is a stand-in. See `Clip`. */
+  placeholder?: boolean;
   shorts: Clip[];
   videos: Clip[];
 };
@@ -30,11 +44,18 @@ export const snapshot = data as Snapshot;
 /**
  * Whether there is anything to watch.
  *
- * Read by the landing page as well as by `/watch`. The channel can be empty —
- * it was when this was built — and an empty `/watch` is a worse destination
- * than the channel itself, so the plate's button chooses its target on this.
+ * The snapshot ships with stand-ins, so in practice this is true — it is here
+ * for the build that fetches a channel mid-deletion and comes back with
+ * nothing. `ChannelSection` renders nothing at all rather than a heading over
+ * an empty row.
  */
 export const hasClips = snapshot.shorts.length + snapshot.videos.length > 0;
+
+/**
+ * Where a tile goes when there is no video behind it, and where the row's
+ * closing button goes in every case.
+ */
+export const CHANNEL_URL = "https://www.youtube.com/@YrsaClicks";
 
 /** `552` to `"9:12"`, `3723` to `"1:02:03"`. Null for an unknown length. */
 export function formatDuration(seconds: number | null): string | null {

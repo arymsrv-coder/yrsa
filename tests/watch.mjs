@@ -1,5 +1,6 @@
 /**
- * Guards `/watch`: the two rows, and the one decision the page's usability
+ * Guards the landing page's channel section: the two rows, and the one
+ * decision the section's usability
  * rests on — that no YouTube player exists until a tile is clicked.
  *
  * Two modes, because the committed snapshot can legitimately be empty (it was
@@ -215,19 +216,26 @@ try {
   browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1100, height: 900 } });
 
-  // Anything the page asks of a third party. `/watch` must reach YouTube only
+  // Anything the page asks of a third party. The rows must reach YouTube only
   // once a tile has been clicked.
   const offsite = [];
   page.on("request", (r) => {
     if (!r.url().startsWith(`http://localhost:${PORT}`)) offsite.push(r.url());
   });
 
-  await page.goto(`http://localhost:${PORT}/watch/`, { waitUntil: "load" });
+  // The rows live on the landing page now, not on a route of their own.
+  await page.goto(`http://localhost:${PORT}/`, { waitUntil: "load" });
 
-  const tiles = page.locator("button:has(img)");
+  const channel = page.locator("#youtube");
+  // A tile is a button when there is a video behind it and a link when it is a
+  // stand-in, so match on the picture rather than on the element.
+  const tiles = channel.locator("button:has(img), a:has(img)");
   const tileCount = await tiles.count();
 
-  check("the /watch route is served", (await page.locator("main").count()) === 1);
+  check(
+    "the channel section is on the landing page",
+    (await channel.count()) === 1,
+  );
   check(
     "no player iframe exists before a click",
     (await page.locator("iframe").count()) === 0,
@@ -238,22 +246,23 @@ try {
     offsite.slice(0, 3).join(", "),
   );
 
-  if (tileCount > 0) {
-    const shortsRow = page.locator("section", {
-      has: page.getByRole("heading", { name: "Shorts" }),
-    });
-    const videosRow = page.locator("section", {
-      has: page.getByRole("heading", { name: "Videos" }),
-    });
+  const shortsRow = channel.locator("section", {
+    has: page.getByRole("heading", { name: "Shorts" }),
+  });
+  const videosRow = channel.locator("section", {
+    has: page.getByRole("heading", { name: "Videos" }),
+  });
 
-    check("the shorts row renders", (await shortsRow.count()) === 1);
-    check("the videos row renders", (await videosRow.count()) === 1);
-    check(
-      "both rows hold tiles",
-      tileCount === PER_ROW * 2,
-      `${tileCount} tiles`,
-    );
+  check("the shorts row renders", (await shortsRow.count()) === 1);
+  check("the videos row renders", (await videosRow.count()) === 1);
+  check("both rows hold tiles", tileCount === PER_ROW * 2, `${tileCount} tiles`);
 
+  // The boot loader sits over everything until the hero has taken over, and a
+  // click that lands on it is a click the row never sees.
+  await page.locator("#youtube").scrollIntoViewIfNeeded();
+  await tiles.first().waitFor({ state: "visible", timeout: 15000 });
+
+  if (FIXTURE) {
     // Clicking a tile must mount a player for that tile's video.
     await tiles.first().click();
     const frame = page.locator("iframe");
@@ -288,34 +297,52 @@ try {
       "closing gives the page its scrolling back",
       (await page.evaluate(() => document.body.style.overflow)) !== "hidden",
     );
-
-    // The chevron drives the same scrollLeft a thumb does.
-    const scroller = shortsRow.locator("div.overflow-x-auto").first();
-    const before = await scroller.evaluate((el) => el.scrollLeft);
-    await shortsRow.getByRole("button", { name: /forward/i }).click();
-    await page.waitForTimeout(700);
-    const after = await scroller.evaluate((el) => el.scrollLeft);
-    check("the chevron advances the row", after > before, `${before} -> ${after}`);
-
-    // At the start of a row there is nowhere to go back to.
-    check(
-      "the back chevron is disabled at the start of a row",
-      await videosRow.getByRole("button", { name: /back/i }).isDisabled(),
-    );
   } else {
+    // The shipped snapshot is stand-ins. A stand-in must never open a player —
+    // there is no video behind it, and an embed would say so in YouTube's
+    // words. It goes to the channel instead.
     check(
-      "an empty snapshot renders the empty state, not empty rows",
-      (await page.getByText(/just getting started/i).count()) === 1,
+      "every shipped tile is a stand-in link, not a player button",
+      (await channel.locator("a:has(img)").count()) === tileCount &&
+        (await channel.locator("button:has(img)").count()) === 0,
     );
     check(
-      "the empty state still offers the channel",
-      (await page.locator('a[href*="youtube.com"]').count()) >= 1,
+      "a stand-in tile points at the channel",
+      (await tiles.first().getAttribute("href"))?.includes(
+        "youtube.com/@YrsaClicks",
+      ) ?? false,
+    );
+    await tiles.first().click({ modifiers: ["Alt"] });
+    check(
+      "clicking a stand-in mounts no player",
+      (await page.locator("iframe").count()) === 0,
     );
     console.log(
-      "\nNOTE  the snapshot is empty, so the row and player assertions did not\n" +
+      "\nNOTE  the snapshot is stand-ins, so the player assertions did not\n" +
         "      run. Use `node tests/watch.mjs --fixture` to exercise them.",
     );
   }
+
+  // The chevron drives the same scrollLeft a thumb does.
+  const scroller = shortsRow.locator("div.overflow-x-auto").first();
+  const before = await scroller.evaluate((el) => el.scrollLeft);
+  await shortsRow.getByRole("button", { name: /forward/i }).click();
+  await page.waitForTimeout(700);
+  const after = await scroller.evaluate((el) => el.scrollLeft);
+  check("the chevron advances the row", after > before, `${before} -> ${after}`);
+
+  // At the start of a row there is nowhere to go back to.
+  check(
+    "the back chevron is disabled at the start of a row",
+    await videosRow.getByRole("button", { name: /back/i }).isDisabled(),
+  );
+
+  // Lenis owns wheel and touch for the landing page. A row inside it has to be
+  // fenced off or a sideways gesture scrolls the page instead of the row.
+  check(
+    "each row is fenced off from Lenis",
+    (await channel.locator("[data-lenis-prevent]").count()) === 2,
+  );
 } catch (error) {
   check("the run completes without throwing", false, error.message);
   console.error(error);

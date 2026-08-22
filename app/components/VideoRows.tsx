@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { asset } from "../lib/asset";
-import { formatDuration, formatWhen, type Clip } from "../lib/youtube";
+import { CHANNEL_URL, formatDuration, formatWhen, type Clip } from "../lib/youtube";
 import { useReducedMotionSafe } from "../lib/useReducedMotionSafe";
+import { useOptionalLenis } from "../context/ScrollContext";
 
 type Kind = "short" | "video";
 
@@ -19,11 +20,13 @@ type Playing = { clip: Clip; kind: Kind };
  * drive the same `scrollLeft` a finger does, so they are a convenience over the
  * scroller rather than the only way through it.
  *
- * This route deliberately does not mount `ScrollProvider`. Lenis takes over
- * wheel and touch for the whole page, and a horizontal scroller inside it has
- * to be fenced off with `data-lenis-prevent` to get its own gestures back.
- * `/members` already sets the precedent that a standalone route scrolls
- * natively, and following it means these rows never enter that fight.
+ * These rows now sit on the landing page, which means they sit inside Lenis —
+ * the arrangement the standalone route existed to avoid. Lenis claims wheel and
+ * touch for the whole page, so a horizontal scroller inside it never sees the
+ * gestures meant for it: a sideways trackpad swipe scrolls the page down
+ * instead of the row across. `data-lenis-prevent` on each scroller hands those
+ * gestures back. The player has the same problem one level up and solves it the
+ * same way — see `Player`.
  */
 export default function VideoRows({
   shorts,
@@ -147,6 +150,9 @@ function Row({
       <div
         ref={scroller}
         onScroll={measure}
+        // Lenis, if it is running, must keep its hands off this one. Without
+        // it a sideways gesture over the row is swallowed by the page.
+        data-lenis-prevent
         // `items-start` is load-bearing, not tidiness. A flex row stretches its
         // items to the tallest by default, and a `<button>` centres its own
         // content vertically by UA rule — so a tile whose title wraps to two
@@ -218,14 +224,8 @@ function Tile({
   const duration = formatDuration(clip.seconds);
   const short = kind === "short";
 
-  return (
-    <button
-      type="button"
-      onClick={(e) => onOpen(clip, kind, e.currentTarget)}
-      className={`group shrink-0 snap-start text-left ${
-        short ? "w-[132px] md:w-[150px]" : "w-[248px] md:w-[304px]"
-      }`}
-    >
+  const frame = (
+    <>
       {/* A hairline, because the ground is paper: a pale frame with no edge
           bleeds into the page and stops reading as a picture. */}
       <div
@@ -252,6 +252,38 @@ function Tile({
       <p className="mt-2 font-[family-name:var(--font-body)] text-[12px] md:text-[13px] font-medium leading-[1.35] text-[var(--color-ink)] group-hover:underline">
         {clip.title}
       </p>
+    </>
+  );
+
+  const shell = `group shrink-0 snap-start text-left block ${
+    short ? "w-[132px] md:w-[150px]" : "w-[248px] md:w-[304px]"
+  }`;
+
+  // A stand-in has no video behind it, so it must not open one. Pressing it
+  // goes to the channel, which is the honest answer to "where is this" and the
+  // one place the real thing will appear first. Deliberately an anchor rather
+  // than a button with a redirect: it looks like what it does in the status
+  // bar, and it can be opened in a new tab like any other link.
+  if (clip.placeholder) {
+    return (
+      <a
+        href={CHANNEL_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={shell}
+      >
+        {frame}
+      </a>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => onOpen(clip, kind, e.currentTarget)}
+      className={shell}
+    >
+      {frame}
     </button>
   );
 }
@@ -276,15 +308,21 @@ function Player({
   onClose: () => void;
 }) {
   const { clip, kind } = playing;
+  const lenis = useOptionalLenis();
   const panel = useRef<HTMLDivElement | null>(null);
   const closeButton = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     closeButton.current?.focus();
 
-    // No Lenis on this route, so the page behind is held with plain overflow.
+    // Hold the page behind the veil. Two mechanisms, because there are two
+    // possible drivers: `overflow` stops a natively scrolling page, and Lenis —
+    // which runs its own RAF loop against its own wrapper and would carry on
+    // scrolling underneath regardless of what `body` says — has to be told
+    // separately. Whichever one is in charge, one of these reaches it.
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    lenis?.stop();
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -314,8 +352,9 @@ function Player({
     return () => {
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previous;
+      lenis?.start();
     };
-  }, [onClose]);
+  }, [onClose, lenis]);
 
   const when = formatWhen(clip.publishedAt);
   const duration = formatDuration(clip.seconds);

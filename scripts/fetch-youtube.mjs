@@ -1,7 +1,14 @@
 /**
  * Pulls the channel's recent uploads into `app/lib/youtube-data.json` and their
- * thumbnails into `public/media/youtube/`, so `/watch` is built from a local
- * snapshot rather than fetching anything at runtime.
+ * thumbnails into `public/media/youtube/`, so the landing page's channel
+ * section is built from a local snapshot rather than fetching anything at
+ * runtime.
+ *
+ * Note what a successful fetch does to the stand-ins the snapshot ships with:
+ * it replaces them wholesale. That is the intent — the first build that finds
+ * real uploads retires the hand-made tiles with nothing to remember to undo.
+ * Their image files stay in `public/media/youtube/` unreferenced; they are
+ * `standin-*.jpg` and safe to delete once that has happened.
  *
  * Runs as `prebuild`, which means it runs on every deploy — and which is why
  * the one rule it must never break is that it cannot fail a build. A missing

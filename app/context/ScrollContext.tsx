@@ -199,6 +199,20 @@ export function ScrollProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * The Lenis instance if there is one, and null rather than a throw if there is
+ * not.
+ *
+ * `useScrollContext` is right for anything that only ever renders inside the
+ * provider. This exists for the pieces that render in both places — the video
+ * rows sit on the landing page, under Lenis, and were written for a standalone
+ * route that scrolled natively. Something that has to pause the page needs to
+ * pause whichever of the two is actually driving it.
+ */
+export function useOptionalLenis() {
+  return useContext(ScrollContext)?.lenis ?? null;
+}
+
 export function useScrollContext() {
   const ctx = useContext(ScrollContext);
   if (!ctx) {

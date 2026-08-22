@@ -1,5 +1,200 @@
 {
   "fetchedAt": null,
-  "shorts": [],
-  "videos": []
+  "placeholder": true,
+  "shorts": [
+    {
+      "id": "standin-short-01",
+      "title": "I guess that's why I love it so much",
+      "publishedAt": "2026-08-20T10:00:00Z",
+      "seconds": 22,
+      "thumb": "/media/youtube/standin-short-01.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-short-02",
+      "title": "How cool is that?!",
+      "publishedAt": "2026-08-18T10:00:00Z",
+      "seconds": 27,
+      "thumb": "/media/youtube/standin-short-02.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-short-03",
+      "title": "This is when it all started",
+      "publishedAt": "2026-08-16T10:00:00Z",
+      "seconds": 32,
+      "thumb": "/media/youtube/standin-short-03.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-short-04",
+      "title": "Macro season, day one",
+      "publishedAt": "2026-08-14T10:00:00Z",
+      "seconds": 37,
+      "thumb": "/media/youtube/standin-short-04.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-short-05",
+      "title": "Golden hour, again",
+      "publishedAt": "2026-08-12T10:00:00Z",
+      "seconds": 42,
+      "thumb": "/media/youtube/standin-short-05.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-short-06",
+      "title": "Found a friend",
+      "publishedAt": "2026-08-10T10:00:00Z",
+      "seconds": 47,
+      "thumb": "/media/youtube/standin-short-06.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-short-07",
+      "title": "The light does that thing",
+      "publishedAt": "2026-07-28T10:00:00Z",
+      "seconds": 52,
+      "thumb": "/media/youtube/standin-short-07.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-short-08",
+      "title": "One frame, twenty tries",
+      "publishedAt": "2026-07-25T10:00:00Z",
+      "seconds": 57,
+      "thumb": "/media/youtube/standin-short-08.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-short-09",
+      "title": "Packing light for once",
+      "publishedAt": "2026-07-22T10:00:00Z",
+      "seconds": 62,
+      "thumb": "/media/youtube/standin-short-09.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-short-10",
+      "title": "Nobody told me about the wind",
+      "publishedAt": "2026-07-19T10:00:00Z",
+      "seconds": 67,
+      "thumb": "/media/youtube/standin-short-10.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-short-11",
+      "title": "Testing the new glass",
+      "publishedAt": "2026-07-16T10:00:00Z",
+      "seconds": 72,
+      "thumb": "/media/youtube/standin-short-11.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-short-12",
+      "title": "Same spot, different year",
+      "publishedAt": "2026-07-13T10:00:00Z",
+      "seconds": 77,
+      "thumb": "/media/youtube/standin-short-12.jpg",
+      "placeholder": true
+    }
+  ],
+  "videos": [
+    {
+      "id": "standin-video-01",
+      "title": "The Search",
+      "publishedAt": "2026-08-20T10:00:00Z",
+      "seconds": 552,
+      "thumb": "/media/youtube/standin-video-01.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-video-02",
+      "title": "Why I Can't Stop Planting",
+      "publishedAt": "2026-08-18T10:00:00Z",
+      "seconds": 518,
+      "thumb": "/media/youtube/standin-video-02.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-video-03",
+      "title": "The Side Quests Made It Better",
+      "publishedAt": "2026-08-16T10:00:00Z",
+      "seconds": 488,
+      "thumb": "/media/youtube/standin-video-03.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-video-04",
+      "title": "Everything I Got Wrong",
+      "publishedAt": "2026-08-14T10:00:00Z",
+      "seconds": 731,
+      "thumb": "/media/youtube/standin-video-04.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-video-05",
+      "title": "Three Days, One Lens",
+      "publishedAt": "2026-08-12T10:00:00Z",
+      "seconds": 402,
+      "thumb": "/media/youtube/standin-video-05.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-video-06",
+      "title": "The Long Way Around",
+      "publishedAt": "2026-08-10T10:00:00Z",
+      "seconds": 905,
+      "thumb": "/media/youtube/standin-video-06.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-video-07",
+      "title": "What the Map Left Out",
+      "publishedAt": "2026-07-28T10:00:00Z",
+      "seconds": 613,
+      "thumb": "/media/youtube/standin-video-07.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-video-08",
+      "title": "Shooting Into the Sun",
+      "publishedAt": "2026-07-25T10:00:00Z",
+      "seconds": 344,
+      "thumb": "/media/youtube/standin-video-08.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-video-09",
+      "title": "A Week With No Plan",
+      "publishedAt": "2026-07-22T10:00:00Z",
+      "seconds": 1120,
+      "thumb": "/media/youtube/standin-video-09.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-video-10",
+      "title": "The Coast Road",
+      "publishedAt": "2026-07-19T10:00:00Z",
+      "seconds": 466,
+      "thumb": "/media/youtube/standin-video-10.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-video-11",
+      "title": "Back to Where It Started",
+      "publishedAt": "2026-07-16T10:00:00Z",
+      "seconds": 780,
+      "thumb": "/media/youtube/standin-video-11.jpg",
+      "placeholder": true
+    },
+    {
+      "id": "standin-video-12",
+      "title": "Still Learning",
+      "publishedAt": "2026-07-13T10:00:00Z",
+      "seconds": 529,
+      "thumb": "/media/youtube/standin-video-12.jpg",
+      "placeholder": true
+    }
+  ]
 }

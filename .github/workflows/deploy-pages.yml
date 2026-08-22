@@ -35,8 +35,8 @@ jobs:
           # writes needs that prefix. Read by next.config.ts and app/lib/asset.ts.
           NEXT_PUBLIC_BASE_PATH: /yrsaclicks
 
-          # Refreshes the channel snapshot as part of the deploy, so /watch
-          # picks up new uploads without a commit. Read by the `prebuild`
+          # Refreshes the channel snapshot as part of the deploy, so the
+          # landing page's channel rows pick up new uploads without a commit. Read by the `prebuild`
           # script, never by the browser — the key stays on the runner and
           # only the fetched JSON and thumbnails reach the artifact.
           #
