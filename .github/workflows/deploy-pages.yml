@@ -57,13 +57,17 @@ jobs:
       # `_next/` — every script and stylesheet 404s.
       - run: touch out/.nojekyll
 
-      # `enablement` turns Pages on for a repository that has never had it,
-      # instead of failing with "Get Pages site failed / Not Found". Without it
-      # this workflow only ever works on a repository somebody has already
-      # switched Pages on for by hand, which a fresh one has not.
+      # Pages has to already exist on the repository for this step to find it.
+      # A repository that has never had it fails here with "Get Pages site
+      # failed / Not Found", and the `enablement: true` option that is supposed
+      # to fix that cannot: creating a Pages site is beyond what the default
+      # `GITHUB_TOKEN` may do, so it swaps the error for "Resource not
+      # accessible by integration" and fails just the same.
+      #
+      # So the first deploy to a new repository needs one manual step —
+      # Settings -> Pages -> Source: GitHub Actions, or
+      # `gh api -X POST repos/<owner>/<repo>/pages -f build_type=workflow`.
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
