@@ -31,9 +31,16 @@ jobs:
 
       - run: npm run build
         env:
-          # Pages serves this repo from /yrsaclicks/, so every URL the site
+          # Pages serves a project repo from /<repo>/, so every URL the site
           # writes needs that prefix. Read by next.config.ts and app/lib/asset.ts.
-          NEXT_PUBLIC_BASE_PATH: /yrsaclicks
+          #
+          # Taken from the repository rather than written down. It was
+          # hardcoded to /yrsaclicks, which was correct for exactly one
+          # repository — pushed to another it would have built a site whose
+          # every script, stylesheet and photograph pointed at a path the host
+          # does not serve. Nothing would have failed loudly; the deploy would
+          # have gone green and the page would have come up blank.
+          NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
 
           # Refreshes the channel snapshot as part of the deploy, so the
           # landing page's channel rows pick up new uploads without a commit. Read by the `prebuild`
@@ -50,7 +57,13 @@ jobs:
       # `_next/` — every script and stylesheet 404s.
       - run: touch out/.nojekyll
 
+      # `enablement` turns Pages on for a repository that has never had it,
+      # instead of failing with "Get Pages site failed / Not Found". Without it
+      # this workflow only ever works on a repository somebody has already
+      # switched Pages on for by hand, which a fresh one has not.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
