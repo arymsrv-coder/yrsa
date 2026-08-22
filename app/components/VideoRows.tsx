@@ -24,9 +24,8 @@ type Playing = { clip: Clip; kind: Kind };
  * the arrangement the standalone route existed to avoid. Lenis claims wheel and
  * touch for the whole page, so a horizontal scroller inside it never sees the
  * gestures meant for it: a sideways trackpad swipe scrolls the page down
- * instead of the row across. `data-lenis-prevent` on each scroller hands those
- * gestures back. The player has the same problem one level up and solves it the
- * same way — see `Player`.
+ * instead of the row across. The attribute on each scroller hands those
+ * gestures back.
  */
 export default function VideoRows({
   shorts,
@@ -127,7 +126,9 @@ function Row({
   return (
     <section>
       <div className="mb-3 flex items-baseline justify-between">
-        <h2 className={`${EYEBROW} opacity-70`}>{label}</h2>
+        {/* `h3`, under the section's own "Watch". These were `h2`, which put a
+          row label at the same level as the heading it belongs to. */}
+      <h3 className={`${EYEBROW} opacity-80`}>{label}</h3>
 
         <div className="flex items-center gap-1">
           <Chevron
@@ -150,9 +151,25 @@ function Row({
       <div
         ref={scroller}
         onScroll={measure}
-        // Lenis, if it is running, must keep its hands off this one. Without
-        // it a sideways gesture over the row is swallowed by the page.
-        data-lenis-prevent
+        // Lenis, if it is running, must keep its hands off *sideways* gestures
+        // over this row. Without that, one is swallowed by the page.
+        //
+        // The axis matters, and reading the attribute name the obvious way gets
+        // it backwards: this says "prevent Lenis when the gesture is
+        // horizontal", not "prevent horizontal scrolling". Lenis works the
+        // orientation out per event from which delta is larger and only honours
+        // the attribute on a match, so a vertical wheel or drag over a
+        // thumbnail still belongs to the page.
+        //
+        // The plain `data-lenis-prevent` was here first and took both axes,
+        // which handed every vertical gesture over a row straight to the
+        // browser. Native scrolling is neither paced nor smoothed — see the
+        // wheel settings in `ScrollContext` for how far off the page's own pace
+        // that is — so the page lurched to roughly three times its speed the
+        // moment a thumbnail came under the pointer. Which, now that the
+        // channel's aperture opens onto this row, is the exact frame the
+        // transition becomes visible: it went from scrubbing to snapping.
+        data-lenis-prevent-horizontal
         // `items-start` is load-bearing, not tidiness. A flex row stretches its
         // items to the tallest by default, and a `<button>` centres its own
         // content vertically by UA rule — so a tile whose title wraps to two
@@ -194,7 +211,11 @@ function Chevron({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="grid h-8 w-8 place-items-center rounded-full text-[var(--color-ink)] transition-opacity duration-200 disabled:pointer-events-none disabled:opacity-20 hover:opacity-60"
+      // 44px, not the 32 this was: the smallest a touch target may be and
+      // still be reliably hittable with a thumb. The chevron itself stays at
+      // 20 — what grew is the box around it, so the row's furniture reads
+      // exactly as quietly as before and is simply easier to hit.
+      className="grid h-11 w-11 place-items-center rounded-full text-[var(--color-ink)] transition-opacity duration-200 disabled:pointer-events-none disabled:opacity-20 hover:opacity-60"
     >
       <svg
         viewBox="0 0 24 24"

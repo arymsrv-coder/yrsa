@@ -23,10 +23,18 @@ import { join } from "node:path";
 import { classify, parseIsoDuration } from "./youtube-classify.mjs";
 
 /**
- * Resolved from the `@YrsaClicks` handle, and confirmed against two independent
- * markers in the channel's own HTML (`channel_id=` and `"externalId"`).
+ * Resolved from the `@yrsasjourney` handle via `channels.list?forHandle=`.
+ *
+ * Not `@YrsaClicks`, which is where this pointed and which is why the rows sat
+ * on stand-ins for so long. That handle resolves to a real channel — the script
+ * was not misconfigured in any way it could detect — but the channel has no
+ * public uploads, so its uploads playlist does not exist and every fetch came
+ * back 404 and fell through to the committed snapshot exactly as designed. The
+ * giveaway was the stand-ins themselves: their titles had been copied from this
+ * channel, so the tiles were already advertising uploads the site could not
+ * reach.
  */
-const CHANNEL_ID = "UCo1Zueyx36kh1htZel-ggsg";
+const CHANNEL_ID = "UCCq1S4pl6FUwKk9nCt-u59w";
 
 /**
  * The uploads playlist is the channel id with `UC` swapped for `UU` — a

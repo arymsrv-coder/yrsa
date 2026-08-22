@@ -118,6 +118,44 @@ body {
   }
 }
 
+/* The slack that lets the channel's content be held still while the panel over
+   it opens.
+ *
+ * A `sticky` child can only be pinned for as much as its containing block is
+ * taller than it, so the section has to carry that much extra height — and it
+ * has to be a box after the content rather than `padding-bottom` on the parent,
+ * which was the first thing tried and does nothing at all. The bound on a
+ * sticky shift is the containing block's *content* box, and padding is by
+ * definition outside it, so the child had exactly zero room to travel and
+ * simply never stuck.
+ *
+ * A spacer leaves nothing behind at the end of the page, which is the whole
+ * point of doing it this way: a sticky child is pushed by the bottom of its
+ * containing block, so once the hold is spent the content comes to rest flush
+ * with the foot of the section and the spacer ends up underneath it rather than
+ * after it. The page still ends on the last row.
+ *
+ * `svh` for the same reason `track-height` uses it: this is scroll distance,
+ * and a mobile toolbar sliding away would otherwise relayout it mid-arrival.
+ * Same custom-property trick, for the same reason — see `track-height`.
+ *
+ * Reduced motion pins the aperture open, so nothing is being uncovered and
+ * there is nothing to hold still for. The spacer collapses, the hold lasts no
+ * distance at all, and the channel is ordinary content that scrolls. */
+.arrival-hold {
+  height: calc(var(--pin-vh) * 1vh);
+}
+@supports (height: 100svh) {
+  .arrival-hold {
+    height: calc(var(--pin-vh) * 1svh);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arrival-hold {
+    height: 0;
+  }
+}
+
 /* The arrival on /members.
  *
  * Two halves of one gesture: an ink veil over the route that clears, and the

@@ -55,7 +55,7 @@ export const hasClips = snapshot.shorts.length + snapshot.videos.length > 0;
  * Where a tile goes when there is no video behind it, and where the row's
  * closing button goes in every case.
  */
-export const CHANNEL_URL = "https://www.youtube.com/@YrsaClicks";
+export const CHANNEL_URL = "https://www.youtube.com/@yrsasjourney";
 
 /** `552` to `"9:12"`, `3723` to `"1:02:03"`. Null for an unknown length. */
 export function formatDuration(seconds: number | null): string | null {

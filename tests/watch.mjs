@@ -135,7 +135,32 @@ const fixtureShorts = Array.from({ length: PER_ROW }, (_, i) =>
 const fixtureVideos = Array.from({ length: PER_ROW }, (_, i) =>
   fixtureClip("Video", i + 1),
 );
-const FIRST = fixtureShorts[0];
+/**
+ * The snapshot the page under test was actually built from, and what that
+ * implies about the tiles.
+ *
+ * This used to key off the `--fixture` flag alone, on the assumption that a
+ * flagless run meant stand-ins. That held only for as long as the committed
+ * snapshot happened to be stand-ins, and it stopped holding the moment the
+ * channel was repointed at one with public uploads: the default run started
+ * asserting that real tiles were links to a channel, clicking one, opening a
+ * player it did not expect, and then failing every later check behind the
+ * player's own veil.
+ *
+ * So the question the branch asks is now the honest one — what is in the
+ * snapshot — and the flag only decides which snapshot that is.
+ */
+const inUse = FIXTURE
+  ? { shorts: fixtureShorts, videos: fixtureVideos }
+  : JSON.parse(committed);
+const CLIPS = [...inUse.shorts, ...inUse.videos];
+const STANDINS = CLIPS.length > 0 && CLIPS.every((c) => c.placeholder);
+const FIRST = inUse.shorts[0] ?? inUse.videos[0];
+
+/** Where a stand-in tile is supposed to go, read off the source of truth. */
+const CHANNEL_URL = (
+  await readFile(join(ROOT, "app/lib/youtube.ts"), "utf8")
+).match(/CHANNEL_URL = "([^"]+)"/)?.[1];
 
 async function writeFixture() {
   await mkdir(THUMBS, { recursive: true });
@@ -262,7 +287,7 @@ try {
   await page.locator("#youtube").scrollIntoViewIfNeeded();
   await tiles.first().waitFor({ state: "visible", timeout: 15000 });
 
-  if (FIXTURE) {
+  if (!STANDINS) {
     // Clicking a tile must mount a player for that tile's video.
     await tiles.first().click();
     const frame = page.locator("iframe");
@@ -308,9 +333,8 @@ try {
     );
     check(
       "a stand-in tile points at the channel",
-      (await tiles.first().getAttribute("href"))?.includes(
-        "youtube.com/@YrsaClicks",
-      ) ?? false,
+      (await tiles.first().getAttribute("href")) === CHANNEL_URL,
+      `${await tiles.first().getAttribute("href")} vs ${CHANNEL_URL}`,
     );
     await tiles.first().click({ modifiers: ["Alt"] });
     check(
@@ -319,7 +343,8 @@ try {
     );
     console.log(
       "\nNOTE  the snapshot is stand-ins, so the player assertions did not\n" +
-        "      run. Use `node tests/watch.mjs --fixture` to exercise them.",
+        "      run. Either fetch a channel with public uploads, or use\n" +
+        "      `node tests/watch.mjs --fixture` to exercise them.",
     );
   }
 
@@ -341,7 +366,8 @@ try {
   // fenced off or a sideways gesture scrolls the page instead of the row.
   check(
     "each row is fenced off from Lenis",
-    (await channel.locator("[data-lenis-prevent]").count()) === 2,
+    (await channel.locator("[data-lenis-prevent-horizontal]").count()) === 2 &&
+      (await channel.locator("[data-lenis-prevent]").count()) === 0,
   );
 } catch (error) {
   check("the run completes without throwing", false, error.message);

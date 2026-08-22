@@ -6,53 +6,19 @@ import Link from "next/link";
 import {
   useMotionValueEvent,
   useScroll,
-  useTransform,
   type MotionValue,
 } from "framer-motion";
-import { useReducedMotionSafe } from "../lib/useReducedMotionSafe";
 import Aperture from "./Aperture";
 import RevealText from "./RevealText";
 import { useScrollContext } from "../context/ScrollContext";
-import { APERTURE_SHUT, APERTURE_STEPS } from "../lib/motion";
+import { TRACK_VH, intoOpening, useApertureScrub } from "../lib/arrival";
 
 /**
- * How much scrolling the section asks for, in viewport heights, and how it is
- * spent.
- *
- * This is the pace control for the whole arrival. The transition is scrubbed by
- * scroll *position*, so its speed is set by distance — not by any duration —
- * and it used to have exactly one viewport to play across, because a section was
- * one viewport tall and that was all the travel there was. On a wheel that read
- * as deliberate, since one notch moves a tenth of a screen. Under a thumb it was
- * over in a flick.
- *
- * `RIDE` is not a free choice: the plate has to cross one screen to arrive, and
- * the layout fixes that. So the room has to be bought for the part that was
- * actually being skipped — the opening — which is why the plate now pins on
- * arrival and the panel comes away against a still frame.
+ * The pacing of the arrival — how far the plate rides, how long it holds, how
+ * much scroll the opening gets — lives in `lib/arrival` now, because the
+ * channel at the foot of the page arrives with the same gesture and has to
+ * arrive at the same speed.
  */
-const RIDE_VH = 1;
-/**
- * The beat between the plate landing and the panel starting to go.
- *
- * It also has to absorb a discrepancy: the track is measured in `svh` and the
- * plate in `dvh`, so the plate pins slightly later in the scrub when a mobile
- * browser has hidden its toolbar — 0.49 of the way along with the toolbar out,
- * a couple of points further without it, against an opening that starts at 0.56.
- * The beat has to be longer than that drift or the panel would begin opening
- * while the plate was still travelling. `tests/scroll-pacing.mjs` measures both
- * points and checks they are still in that order.
- */
-const HOLD_VH = 0.15;
-/** Scroll given to the three-stage opening itself. */
-const OPEN_VH = 0.9;
-const TRACK_VH = RIDE_VH + HOLD_VH + OPEN_VH;
-
-/** Where in the scrub the panel begins to come away. */
-const OPEN_AT = (RIDE_VH + HOLD_VH) / TRACK_VH;
-
-/** Place a fraction of the opening on the section's own 0–1 scrub. */
-const intoOpening = (t: number) => OPEN_AT + t * (1 - OPEN_AT);
 
 /**
  * The plate's button.
@@ -177,30 +143,7 @@ export default function StackSection({
     };
   }, [scrollYProgress, nextProgressMV]);
 
-  // The loader's three-step opening, scrubbed by scroll instead of a clock:
-  // held shut while the panel rides up, then the hole widens sideways into a
-  // letterbox, then it opens out. Scrolling back up closes it the same way.
-  //
-  // Reduced motion pins the panel open, so sections simply stack without the
-  // masked reveal riding the scroll.
-  // The stops come straight from APERTURE_STEPS now, remapped onto the part of
-  // the scrub that happens after the plate has landed, with one extra stop in
-  // front holding the panel shut through the ride-up. They used to be written out
-  // by hand and had drifted a little off the shared numbers; deriving them is
-  // what makes "the loader and the scroll are the same animation" literally true.
-  const reduce = useReducedMotionSafe();
-  const frames = [0, ...APERTURE_STEPS.t.map(intoOpening)];
-  const shut = frames.map(() => 0);
-  const sx = useTransform(
-    scrollYProgress,
-    frames,
-    reduce ? shut : [APERTURE_SHUT, ...APERTURE_STEPS.x],
-  );
-  const sy = useTransform(
-    scrollYProgress,
-    frames,
-    reduce ? shut : [APERTURE_SHUT, ...APERTURE_STEPS.y],
-  );
+  const { sx, sy } = useApertureScrub(scrollYProgress);
 
   const panelColor =
     panel === "ink" ? "var(--color-ink)" : "var(--color-paper)";
@@ -274,7 +217,7 @@ export default function StackSection({
           next line of the same thought. */}
       <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-[2.2dvh] px-6 text-center pointer-events-none">
         <RevealText
-          as="h3"
+          as="h2"
           text={title}
           trigger={titleOn}
           className="font-[family-name:var(--font-body)] font-semibold uppercase text-[9vw] md:text-[5.5vw] leading-[0.95] tracking-[-0.02em]"
@@ -312,7 +255,9 @@ export default function StackSection({
       {/* subtitle */}
       <div className="absolute bottom-[8dvh] left-0 right-0 z-10 flex justify-center px-6 pointer-events-none">
         <RevealText
-          as="h4"
+          // A tagline under the title, not a section of its own — it was an
+          // `h4`, which put a heading in the outline for a line of prose.
+          as="p"
           text={subtitle}
           trigger={metaOn}
           delay={0.1}

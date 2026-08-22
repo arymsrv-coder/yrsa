@@ -6,6 +6,17 @@ import HoverRoll from "./HoverRoll";
 import { useScrollContext } from "../context/ScrollContext";
 
 /**
+ * One class for both social links, so the two cannot drift apart.
+ *
+ * The padding is the point of it. These links were 27px tall, and a touch
+ * target has to be 44 to be reliably hittable with a thumb. `HoverRoll` cancels
+ * its own clip padding with a negative margin, so the box can grow out here
+ * without the roll or the label changing at all.
+ */
+const SOCIAL_CLASS =
+  "py-3 font-[family-name:var(--font-body)] uppercase tracking-[0.14em] text-[12px] md:text-[14px]";
+
+/**
  * The footer's contents are parked well above their resting place and fall into
  * it as the block scrolls up, so the type lags behind the panel it sits on and
  * the last screen settles rather than simply arriving.
@@ -51,7 +62,7 @@ export default function Footer({
             href="https://instagram.com/yrsaclicks"
             external
             text="dm @yrsaclicks"
-            className="font-[family-name:var(--font-body)] uppercase tracking-[0.14em] text-[12px] md:text-[14px]"
+            className={SOCIAL_CLASS}
           />
         </div>
         <div className="flex flex-col gap-2 items-center">
@@ -62,7 +73,7 @@ export default function Footer({
             href="https://instagram.com/yrsasjourney"
             external
             text="@yrsasjourney"
-            className="font-[family-name:var(--font-body)] uppercase tracking-[0.14em] text-[12px] md:text-[14px]"
+            className={SOCIAL_CLASS}
           />
         </div>
       </motion.div>
@@ -77,7 +88,7 @@ export default function Footer({
 
       <div className="flex justify-between items-end py-2 font-[family-name:var(--font-body)] uppercase tracking-[0.12em] text-[10px] md:text-[12px]">
         <span>© 2026 yrsaclicks</span>
-        <HoverRoll href={creditsHref} text="credits" className="py-2" />
+        <HoverRoll href={creditsHref} text="credits" className="py-3" />
       </div>
     </footer>
   );

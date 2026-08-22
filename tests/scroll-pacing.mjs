@@ -236,6 +236,249 @@ check("panel is partway open mid-scrub", mid > 0 && mid < 50, `mask=${mid}`);
 const end = await apertureAt(1);
 check("panel is fully open at the end of the scroll", end === 0, `mask=${end}`);
 
+/* ---------- the channel's arrival ---------- */
+
+/**
+ * The channel used to slide into view as ordinary content while both plates
+ * above it opened out of a box in the middle of the screen. It arrives through
+ * the same aperture now, off the same shared pacing in `lib/arrival`, and these
+ * check that it is genuinely the same gesture rather than a lookalike.
+ *
+ * Measured against the *second* track on the page — the helpers above all take
+ * the first, which is the archive plate's.
+ */
+const channel = await page.evaluate(() => {
+  const wrap = document.querySelector(".fixed.inset-0.overflow-y-auto");
+  const track = document.querySelectorAll(".track-height")[1];
+  if (!track) return null;
+  const top =
+    track.getBoundingClientRect().top -
+    wrap.getBoundingClientRect().top +
+    wrap.scrollTop;
+  return { start: top - wrap.clientHeight, span: track.offsetHeight, viewport: wrap.clientHeight };
+});
+
+check("the channel has an arrival track of its own", channel !== null);
+
+if (channel) {
+  check(
+    "the channel's arrival is paced like the plates'",
+    Math.abs(channel.span / channel.viewport - viewports) < 0.02,
+    `${(channel.span / channel.viewport).toFixed(2)} viewports against the plate's ${viewports.toFixed(2)}`,
+  );
+
+  /** The channel panel's two numbers, back in 50-is-shut units. */
+  const channelApertureAt = (f) =>
+    page.evaluate(async ([f, start, span]) => {
+      const wrap = document.querySelector(".fixed.inset-0.overflow-y-auto");
+      wrap.scrollTop = start + span * f;
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      const panel = document.querySelector('[data-arrival="channel"] > div');
+      // A shut band is the identity transform, which the browser reports as
+      // `none` rather than as a matrix.
+      const read = (el, i) => {
+        const t = getComputedStyle(el).transform;
+        if (t === "none") return 50;
+        return Math.round(parseFloat(t.match(/matrix\(([^)]+)\)/)[1].split(",")[i]) * 500) / 10;
+      };
+      // Top band carries the vertical scale, left band the horizontal.
+      return { sy: read(panel.children[0], 3), sx: read(panel.children[2], 0) };
+    }, [f, channel.start, channel.span]);
+
+  const cEarly = await channelApertureAt(0.2);
+  check(
+    "the channel's panel is shut while it rides up",
+    cEarly.sx === 50 && cEarly.sy === 50,
+    `sx=${cEarly.sx} sy=${cEarly.sy}`,
+  );
+
+  // The same fraction the plate is still holding shut at, so the beat is there
+  // too rather than the opening having been slid forward.
+  const cHold = await channelApertureAt(lands + (opens - lands) / 2);
+  check(
+    "the channel's panel still holds shut inside the beat",
+    cHold.sx === 50 && cHold.sy === 50,
+    `sx=${cHold.sx} sy=${cHold.sy}`,
+  );
+
+  // A box, and a wide one: the two axes are deliberately out of step so the
+  // hole widens into a letterbox before it opens out. A symmetric version would
+  // pass a "partway open" check and still be the wrong move.
+  const cMid = await channelApertureAt(opens + (1 - opens) / 2);
+  check(
+    "a box is open in the middle of the channel's panel mid-scrub",
+    cMid.sx > 0 && cMid.sx < 50 && cMid.sy > 0 && cMid.sy < 50,
+    `sx=${cMid.sx} sy=${cMid.sy}`,
+  );
+  check(
+    "the channel's box opens sideways first, as the plates' do",
+    cMid.sx < cMid.sy,
+    `sx=${cMid.sx} sy=${cMid.sy}`,
+  );
+
+  const cEnd = await channelApertureAt(1);
+  check(
+    "the channel's panel is fully open at the end of its track",
+    cEnd.sx === 0 && cEnd.sy === 0,
+    `sx=${cEnd.sx} sy=${cEnd.sy}`,
+  );
+
+  // The point of the arrival, and the thing it got wrong twice: the box has to
+  // open onto the work. It opened onto blank paper with the rows a screen
+  // below, which made the gesture an advertisement for a page rather than the
+  // page arriving. So the heading has to be on screen, and the content has to
+  // be *still* — uncovered in place, not sliding up behind a widening hole.
+  const uncovered = await page.evaluate(async ([start, span]) => {
+    const wrap = document.querySelector(".fixed.inset-0.overflow-y-auto");
+    const content = document.querySelector("#youtube .sticky.top-0.z-0");
+    const read = async (f) => {
+      wrap.scrollTop = start + span * f;
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      return {
+        content: Math.round(content.getBoundingClientRect().top),
+        heading: Math.round(document.querySelector("#youtube h2").getBoundingClientRect().top),
+        tiles: document.querySelectorAll("#youtube img").length,
+      };
+    };
+    // The frame the opening starts on, and the frame it finishes on.
+    return { open: await read(0.57), done: await read(1) };
+  }, [channel.start, channel.span]);
+
+  check(
+    "the box opens onto the rows, not onto a blank page",
+    uncovered.done.heading >= 0 && uncovered.done.heading < 400 && uncovered.done.tiles > 0,
+    `heading at ${uncovered.done.heading}, ${uncovered.done.tiles} thumbnails`,
+  );
+  check(
+    "the content is held still while it is uncovered",
+    uncovered.open.content === 0 && uncovered.done.content === 0,
+    `${uncovered.open.content} at the start of the opening, ${uncovered.done.content} at the end`,
+  );
+
+  // Holding it costs the page a screen of scroll. That screen must not turn up
+  // as empty paper: the sticky content is pushed by the bottom of its
+  // containing block, so it comes to rest flush with the foot of the section
+  // and the footer starts immediately underneath it.
+  //
+  // Measured against the footer rather than against the bottom of the page,
+  // which is what this asked before there was one. The question was always "is
+  // there dead space after the rows", and the footer is now what answers it.
+  const foot = await page.evaluate(async () => {
+    const wrap = document.querySelector(".fixed.inset-0.overflow-y-auto");
+    wrap.scrollTop = wrap.scrollHeight;
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const content = document.querySelector("#youtube .sticky.top-0.z-0");
+    const footer = document.querySelector("footer");
+    return {
+      gap: Math.round(
+        footer.getBoundingClientRect().top - content.getBoundingClientRect().bottom,
+      ),
+      pageEnd: Math.round(wrap.clientHeight - footer.getBoundingClientRect().bottom),
+    };
+  });
+  check(
+    "no dead paper between the last row and the footer",
+    Math.abs(foot.gap) <= 1,
+    `${foot.gap}px`,
+  );
+  check(
+    "the page comes to rest on the foot of the footer",
+    Math.abs(foot.pageEnd) <= 1,
+    `${foot.pageEnd}px`,
+  );
+
+  // The wordmark is fixed, centred and blend-mode'd over everything, and the
+  // channel sets its own type near the top of the screen. It has to be gone by
+  // the time the panel opens, and back when you scroll away.
+  const markAt = async (f) => {
+    await page.evaluate(([f, start, span]) => {
+      document.querySelector(".fixed.inset-0.overflow-y-auto").scrollTop = start + span * f;
+    }, [f, channel.start, channel.span]);
+    // Not a scrub: the retract is a timed animation off an IntersectionObserver,
+    // so it needs longer than a frame to have happened.
+    await page.waitForTimeout(900);
+    return page.evaluate(() =>
+      Math.round(document.querySelector("header a[aria-label]").getBoundingClientRect().top),
+    );
+  };
+
+  /**
+   * Who owns a gesture over a thumbnail.
+   *
+   * The rows are native horizontal scrollers inside Lenis, so they have to be
+   * fenced off — but the fence used to be `data-lenis-prevent`, which takes
+   * both axes. Every vertical gesture over a row went straight to the browser,
+   * and native scrolling is neither paced nor smoothed: the page jumped from 42
+   * pixels a notch to 120 and the aperture stopped scrubbing and started
+   * snapping. Harmless while the rows were at the foot of a long page; not
+   * harmless now the box opens onto them, because the pointer is over a
+   * thumbnail on the exact frame the transition becomes visible.
+   *
+   * Lenis claims an event by calling `preventDefault` on it, so that is the
+   * question being asked here: vertical belongs to the page, sideways belongs
+   * to the row.
+   */
+  const owns = await page.evaluate(() => {
+    const row = document.querySelector("#youtube [data-lenis-prevent-horizontal]");
+    if (!row) return null;
+    const tile = row.querySelector("a, button");
+    const fire = (deltaX, deltaY) => {
+      const event = new WheelEvent("wheel", {
+        deltaX,
+        deltaY,
+        bubbles: true,
+        cancelable: true,
+      });
+      tile.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    return {
+      down: fire(0, 120),
+      mostlyDown: fire(20, 120),
+      sideways: fire(200, 60),
+    };
+  });
+
+  check(
+    "a vertical gesture over a thumbnail still belongs to the page",
+    owns?.down === true && owns?.mostlyDown === true,
+    JSON.stringify(owns),
+  );
+  check(
+    "a sideways gesture over a thumbnail still belongs to the row",
+    owns?.sideways === false,
+    JSON.stringify(owns),
+  );
+
+  check("the mark is still there while the channel's panel rides up", (await markAt(0.2)) > 0);
+  check("the mark is gone by the time the box opens", (await markAt(opens)) < 0);
+  check("the mark comes back on the way out", (await markAt(-0.3)) > 0);
+}
+
+/* ---------- reduced motion ---------- */
+
+// The hold is a screen of scroll that exists only so the content can be kept
+// still under an opening panel. With reduced motion the aperture is pinned open
+// and nothing is being uncovered, so the hold is not a gentler experience —
+// just a longer one.
+const quiet = await browser.newPage({
+  viewport: { width: 390, height: 844 },
+  reducedMotion: "reduce",
+});
+await quiet.goto(`http://localhost:${PORT}/`, { waitUntil: "load" });
+await quiet.waitForFunction(() => !document.querySelector('[class*="z-[300]"]'), null, {
+  timeout: 15000,
+});
+const quietHeight = await quiet.evaluate(() => {
+  const el = document.querySelector("#youtube .arrival-hold");
+  return el ? el.offsetHeight : -1;
+});
+check(
+  "reduced motion collapses the channel's hold entirely",
+  quietHeight === 0,
+  `${quietHeight}px`,
+);
+
 await browser.close();
 server.close();
 
