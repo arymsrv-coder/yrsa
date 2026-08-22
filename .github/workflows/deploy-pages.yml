@@ -20,9 +20,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      # `node-version` is the Node this project builds on, and is not what the
+      # runner's Node 20 notice was about — that one is the runtime the actions
+      # themselves declare, which is why the pinned versions moved and this
+      # number did not.
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -67,8 +71,13 @@ jobs:
       # So the first deploy to a new repository needs one manual step —
       # Settings -> Pages -> Source: GitHub Actions, or
       # `gh api -X POST repos/<owner>/<repo>/pages -f build_type=workflow`.
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
 
+      # Left on v3, with v5 available, because this pair has to match the
+      # `deploy-pages` below and the two of them are the only steps here that
+      # were not named in the Node 20 notice. Moving them is a change to how the
+      # artifact is uploaded rather than a runtime bump, so it wants its own run
+      # to prove rather than riding along with one.
       - uses: actions/upload-pages-artifact@v3
         with:
           path: out
