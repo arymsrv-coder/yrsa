@@ -3,17 +3,17 @@
 import { asset } from "../lib/asset";
 
 /** Intrinsic proportions of the trimmed mark. */
-export const LOGO_RATIO = "1200 / 308";
+export const LOGO_RATIO = "1200 / 469";
 
 /**
- * Derived from `logo/logo2.png`, which arrives as a 2000×2000 canvas that is
- * 92% empty and carries a drop shadow. Both had to go: the empty margins would
- * make the element mostly dead space, and a drop shadow inside an alpha mask is
- * not a shadow — it paints as a second, softer copy of the mark in the same flat
- * colour. The source is trimmed to the letters and the ~150-alpha shadow band
- * removed, keeping the edge antialiasing above it.
+ * Derived from `logo/yrsalogo_clean.png`, which arrives as black ink on an
+ * opaque white field — it carries no alpha at all. A mask reads the alpha
+ * channel, so an untouched copy would mask nothing away and paint a solid
+ * rectangle. The ink coverage becomes the alpha instead — opaque where the
+ * source is black, clear where it is white — and the white margin is trimmed
+ * off, so the element is the letters rather than mostly dead space.
  */
-const LOGO_SRC = asset("/media/logo-yrsa2.png");
+const LOGO_SRC = asset("/media/logo-yrsa3.png");
 
 /**
  * The YRSA mark, drawn as a mask rather than an image.

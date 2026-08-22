@@ -8,16 +8,23 @@ import Loader from "./components/Loader";
 import StackSection from "./components/StackSection";
 import { ScrollProvider } from "./context/ScrollContext";
 import { asset } from "./lib/asset";
+import { hasClips } from "./lib/youtube";
 
-// One plate, arriving on the ink half of the two-tone system over the hero's
-// footage. The page is now the shortest it can be and still have somewhere to
-// go: the footage, then the way in.
+// Two plates over the hero's footage: the footage, the way in, then the free
+// half of the work.
 //
-// The panel used to be paper, which meant the one solid sheet the visitor sees
-// on the way in was off-white — the only place on the site where the ground was
-// not the brand green. Ink puts the arrival on the same green as the loading
-// screen it followed, and the header's `mix-blend-difference` mark inverts to
-// pale over it without needing anything said here.
+// They alternate across the two-tone system, and the order is the argument. The
+// archive arrives on ink — the same green as the loading screen it followed, so
+// the first solid sheet a visitor meets is the brand's own ground rather than an
+// off-white sheet that appears nowhere else. The channel then arrives on paper,
+// which is the other half of the same system and the only way a second arrival
+// reads as a second thing rather than a repeat of the first. The header's
+// `mix-blend-difference` mark inverts over either one without needing anything
+// said here.
+//
+// Order is scroll order: the paid archive is what the site is for, so it comes
+// first, and the channel sits under it as the thing to do if the answer to the
+// first plate was no.
 const sections = [
   {
     // Explicit, not derived from the title — the title is two words now, and
@@ -32,6 +39,38 @@ const sections = [
       label: "Continue",
       href: "/members",
     },
+  },
+  {
+    id: "youtube",
+    index: "02",
+    title: "The channel",
+    subtitle: "Watch on YouTube",
+    poster: asset("/media/youtube.jpg"),
+    // A landscape frame cropped to portrait, so she stands lower in it than the
+    // studio still does and there is sky over her head. Holding the top of that
+    // would give a desktop screen half a plate of empty blue with the title on
+    // her face; centring keeps the whole figure and the horizon.
+    focus: "center" as const,
+    // The other half of the two-tone system — see the note above.
+    panel: "paper" as const,
+    // A stated button rather than a clickable plate, so this plate is read the
+    // same way as the one above it: the whole picture is not a link, one thing
+    // on it is. `external` is what sends it off-site in a new tab.
+    //
+    // Where it goes depends on whether there is anything to watch. `/watch`
+    // holds the channel's recent work and plays it here, which is the better
+    // destination — but only once it has something on it. An empty `/watch` is
+    // a worse place to land than the channel itself, so while the build
+    // snapshot is empty the button keeps doing what it has always done. The
+    // first build that finds uploads flips it, with nothing to remember to
+    // change by hand.
+    cta: hasClips
+      ? { label: "Watch", href: "/watch" }
+      : {
+          label: "Watch",
+          href: "https://www.youtube.com/@YrsaClicks",
+          external: true,
+        },
   },
 ];
 

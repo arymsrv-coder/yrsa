@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
-/* z-index scale: 150 nav header, 250 age-gate overlay, 260 members header
-   (above the gate), 270 members arrival veil, 300 boot loader (above
-   everything). Keep new fixed/sticky layers on this scale instead of picking an
-   arbitrary number. */
+/* z-index scale: 150 nav header, 250 age-gate overlay and the /watch player
+   (different routes, so they never coexist), 260 members header (above the
+   gate), 270 members arrival veil, 300 boot loader (above everything). Keep new
+   fixed/sticky layers on this scale instead of picking an arbitrary number. */
 
 :root {
   /* Two-tone system. --color-ink plays the role red plays on the
@@ -31,6 +31,13 @@
   /* Filled-button ground. Darkened from the archive's #8a6a3a so that paper
      text on it clears 4.5:1 (5.14:1). */
   --color-brass: #7a5a2c;
+
+  /* The hover state for anything filled with brass. Brass used to be the hover
+     and ink the resting fill; now that the plate's button rests on brass it
+     needs somewhere to go, and going *down* is the only direction available —
+     lightening brass would take paper text below 4.5:1. Paper on this is
+     6.71:1. */
+  --color-brass-deep: #644a24;
 
   /* Button outline. Warmer and a shade deeper than --color-paper, so the edge
      still separates from paper-coloured type sitting inside it instead of
@@ -93,11 +100,8 @@ body {
   .mt-\[4dvh\] {
     margin-top: 4vh;
   }
-  .mt-\[1\.5dvh\] {
-    margin-top: 1.5vh;
-  }
-  .gap-\[4dvh\] {
-    gap: 4vh;
+  .gap-\[2\.2dvh\] {
+    gap: 2.2vh;
   }
 }
 
@@ -181,6 +185,35 @@ body {
 
   .plate-arrive {
     animation: plate-fade-in 300ms linear forwards;
+  }
+}
+
+/* The veil behind the player on /watch.
+ *
+ * Deliberately not `gate-veil`, which is the neighbouring block and was the
+ * first thing tried. That one is tuned to sit over the members plate — a
+ * full-bleed photograph on a dark ground — where a little over a third of ink
+ * is plenty to hold a panel forward. `/watch` is paper, and the same wash over
+ * paper is pale sage: the player stopped reading as the thing in front, and the
+ * paper-coloured caption under it landed at roughly the value of the veil
+ * itself, which is a contrast failure rather than a matter of taste.
+ *
+ * Going dark is also the right gesture for watching — a room lowering its
+ * lights — so this one commits to it instead of hedging.
+ */
+.player-veil {
+  background-color: color-mix(in srgb, var(--color-ink) 92%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* Without the blur the colour is carrying it alone, so it goes very nearly
+   opaque — same reasoning as the gate below. */
+@supports not (
+  (backdrop-filter: blur(8px)) or (-webkit-backdrop-filter: blur(8px))
+) {
+  .player-veil {
+    background-color: color-mix(in srgb, var(--color-ink) 97%, transparent);
   }
 }
 

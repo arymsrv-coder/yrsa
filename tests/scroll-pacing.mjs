@@ -76,15 +76,41 @@ await page.waitForFunction(
   { timeout: 15000 },
 );
 
+/**
+ * The stretch of scroll that belongs to the *first* section's transition.
+ *
+ * Everything below is a fraction of this window rather than of the document,
+ * and that distinction only started mattering when the page grew a second
+ * section: measured against the whole document, "halfway through the scroll"
+ * stopped being the middle of an opening and became the seam between two of
+ * them, where the first panel is fully open and the check for a partway-open
+ * panel read a hard 0.
+ *
+ * The window is the section's own scrub — `useScroll` with `start end`/`end end`
+ * — so it opens when the track's top reaches the bottom of the viewport and
+ * closes when its bottom does. That is one track-height of travel, starting one
+ * viewport before the track.
+ */
 const geometry = await page.evaluate(() => {
   const wrap = document.querySelector(".fixed.inset-0.overflow-y-auto");
+  const track = document.querySelector(".track-height");
+  const viewport = wrap.clientHeight;
+  // Layout position, not screen position: the rect is relative to the viewport,
+  // so the container's own scroll has to be added back.
+  const trackTop =
+    track.getBoundingClientRect().top -
+    wrap.getBoundingClientRect().top +
+    wrap.scrollTop;
   return {
+    start: trackTop - viewport,
+    span: track.offsetHeight,
+    viewport,
     scrollable: wrap.scrollHeight - wrap.clientHeight,
-    viewport: wrap.clientHeight,
   };
 });
 
-const viewports = geometry.scrollable / geometry.viewport;
+const viewports = geometry.span / geometry.viewport;
+const { start, span } = geometry;
 
 // One flick of a thumb covers roughly half a screen of travel plus momentum. At
 // a single viewport of scroll the whole opening was over in one gesture; two and
@@ -92,7 +118,7 @@ const viewports = geometry.scrollable / geometry.viewport;
 check(
   "transition has more than 2 viewports of scroll to play across",
   viewports > 2,
-  `${viewports.toFixed(2)} viewports (${geometry.scrollable}px)`,
+  `${viewports.toFixed(2)} viewports (${geometry.span}px of a ${geometry.scrollable}px page)`,
 );
 
 /**
@@ -104,9 +130,9 @@ check(
  * where `d` is the vertical scale.
  */
 async function apertureAt(fraction) {
-  return page.evaluate(async (f) => {
+  return page.evaluate(async ([f, start, span]) => {
     const wrap = document.querySelector(".fixed.inset-0.overflow-y-auto");
-    wrap.scrollTop = (wrap.scrollHeight - wrap.clientHeight) * f;
+    wrap.scrollTop = start + span * f;
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     const band = document.querySelector(".z-20")?.firstElementChild;
     if (!band) return null;
@@ -118,7 +144,7 @@ async function apertureAt(fraction) {
     if (!m) return null;
     const scaleY = parseFloat(m[1].split(",")[3]);
     return Math.round(scaleY * 50 * 10) / 10;
-  }, fraction);
+  }, [fraction, start, span]);
 }
 
 /**
@@ -129,19 +155,18 @@ async function apertureAt(fraction) {
  * moving, whatever the constants happen to say.
  */
 async function plateLandsAt() {
-  return page.evaluate(() => {
+  return page.evaluate(([start, span]) => {
     const wrap = document.querySelector(".fixed.inset-0.overflow-y-auto");
-    const max = wrap.scrollHeight - wrap.clientHeight;
     const track = document.querySelector(".track-height");
     const STEPS = 500;
     for (let i = 0; i <= STEPS; i++) {
-      wrap.scrollTop = (max * i) / STEPS;
+      wrap.scrollTop = start + (span * i) / STEPS;
       // Sticky offset is layout, not animation, so it is settled by the time
       // the rect can be read — no frame to wait for.
       if (track.getBoundingClientRect().top <= 0.5) return i / STEPS;
     }
     return 1;
-  });
+  }, [start, span]);
 }
 
 /**
@@ -151,15 +176,14 @@ async function plateLandsAt() {
  * because nothing can have opened before the plate has crossed a screen.
  */
 async function panelOpensAt() {
-  return page.evaluate(async () => {
+  return page.evaluate(async ([start, span]) => {
     const wrap = document.querySelector(".fixed.inset-0.overflow-y-auto");
-    const max = wrap.scrollHeight - wrap.clientHeight;
     const band = document.querySelector(".z-20")?.firstElementChild;
     if (!band) return null;
     const STEPS = 140;
     for (let i = 0; i <= STEPS; i++) {
       const f = 0.3 + (0.7 * i) / STEPS;
-      wrap.scrollTop = max * f;
+      wrap.scrollTop = start + span * f;
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       const t = getComputedStyle(band).transform;
       if (t === "none") continue;
@@ -167,7 +191,7 @@ async function panelOpensAt() {
       if (m && parseFloat(m[1].split(",")[3]) * 50 < 49.9) return f;
     }
     return 1;
-  });
+  }, [start, span]);
 }
 
 // 50 is a shut panel, 0 is fully retracted. The plate spends the first stretch

@@ -55,23 +55,31 @@ export function ScrollProvider({ children }: { children: React.ReactNode }) {
 
       // Pace is set in two places, and they do different jobs.
       //
-      // `wheelMultiplier` is how far one gesture asks the page to travel. It
-      // is halved from the browser default feel so the sections, whose
-      // transitions are scrubbed by scroll position, get room to actually play.
+      // `wheelMultiplier` is how far one gesture asks the page to travel. It is
+      // still well under the browser default, because the sections' transitions
+      // are scrubbed by scroll position and need room to play — but it was so
+      // far under it that crossing one transition took upwards of 120 notches of
+      // a mouse wheel, and the deliberate pace had turned into work. A bit over
+      // twice the travel per gesture roughly halves that without the opening
+      // going by in a flick. Raised together with the per-event cap below,
+      // which is the one that actually governs a trackpad.
       //
       // `duration` + `easing` is how that travel is served. Lenis will use a
       // fixed-length eased glide when both are given and fall back to `lerp`
       // otherwise — and `lerp` is an exponential chase, so how much of a
       // gesture had landed by the time you stopped depended on how hard you
       // threw it. A fixed duration settles every gesture over the same span,
-      // which is what makes the pace feel even instead of springy.
-      duration: reduce ? undefined : 1.5,
+      // which is what makes the pace feel even instead of springy. Shortened
+      // along with the multiplier: the glide is what the eye reads as the site
+      // catching up with the hand, and a longer settle on a longer throw reads
+      // as lag rather than smoothing.
+      duration: reduce ? undefined : 1.1,
       easing: reduce
         ? undefined
         : (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       lerp: reduce ? 1 : undefined,
 
-      wheelMultiplier: reduce ? 1 : 0.15,
+      wheelMultiplier: reduce ? 1 : 0.35,
 
       // 1:1 with the thumb. A drag is direct manipulation — the plate should sit
       // under the finger that is moving it — so unlike the wheel there is no
@@ -85,9 +93,15 @@ export function ScrollProvider({ children }: { children: React.ReactNode }) {
       // A mouse notch and a trackpad flick are wildly different inputs — one
       // reports a tidy delta, the other reports bursts many times larger,
       // especially once momentum kicks in. That difference, not the multiplier,
-      // is what made the pace feel unpredictable. Capping each event at a tenth
-      // of a screen leaves ordinary scrolling untouched and only trims the
-      // spikes, so both devices settle at the same rate.
+      // is what made the pace feel unpredictable. Capping each event leaves
+      // ordinary scrolling untouched and only trims the spikes, so both devices
+      // settle at the same rate.
+      //
+      // Note which knob is doing the work for which device: a trackpad's bursts
+      // are large enough to be sitting *on* this cap, so the multiplier above
+      // never reaches them and the cap is the whole of their pace. It had to
+      // come up with the multiplier or the wheel would have got faster and the
+      // trackpad would not have moved at all.
       //
       // Note the units: Lenis applies `wheelMultiplier` before handing the
       // event here, so `deltaY` at this point is already in pixels-of-travel,
@@ -100,7 +114,7 @@ export function ScrollProvider({ children }: { children: React.ReactNode }) {
         // the device-to-device spread this exists to flatten.
         if (data.event.type !== "wheel") return true;
 
-        const cap = window.innerHeight * 0.1;
+        const cap = window.innerHeight * 0.18;
         data.deltaY = Math.max(-cap, Math.min(cap, data.deltaY));
         return true;
       },

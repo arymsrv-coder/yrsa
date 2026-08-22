@@ -58,11 +58,12 @@ export default function Header({ ready = true }: { ready?: boolean }) {
           aria-label="yrsaclicks — back to top"
           className="block cursor-pointer opacity-100 transition-opacity duration-200 hover:opacity-60"
         >
-          {/* The handwritten mark is nearly four times as wide as it is tall, so
-              a given width buys far less height than the old wordmark did — and
-              it spells the whole name rather than four letters. These widths are
-              deliberately restrained. */}
-          <Logo className="w-[150px] md:w-[200px] lg:w-[230px]" />
+          {/* The mark is about two and a half times as wide as it is tall, so a
+              given width buys noticeably more height than the wide handwritten
+              version did. These widths stay restrained for that reason — the
+              lift over the previous set is in the artwork's proportions as much
+              as in the numbers. */}
+          <Logo className="w-[165px] md:w-[215px] lg:w-[250px]" />
         </a>
       </Drop>
     </header>

@@ -4,10 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/fetch-youtube.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:pacing": "node tests/scroll-pacing.mjs"
+    "youtube": "node scripts/fetch-youtube.mjs",
+    "test:pacing": "node tests/scroll-pacing.mjs",
+    "test:watch": "node tests/watch.mjs"
   },
   "dependencies": {
     "framer-motion": "^13.0.0",

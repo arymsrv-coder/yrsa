@@ -89,7 +89,7 @@ export default function MembersPage() {
           // ends up behind it.
           style={{ filter: "drop-shadow(0 1px 10px rgba(0,0,0,0.55))" }}
         >
-          <Logo className="w-[130px] md:w-[180px]" />
+          <Logo className="w-[145px] md:w-[195px]" />
         </Link>
       </div>
 

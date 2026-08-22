@@ -29,7 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <link
           rel="preload"
           as="image"
-          href={asset("/media/logo-yrsa2.png")}
+          href={asset("/media/logo-yrsa3.png")}
           // The mark is fetched by a CSS `mask-image`, and a CSS image load is
           // anonymous. A preload without this defaults to sending credentials,
           // which is a different request as far as the cache is concerned — the

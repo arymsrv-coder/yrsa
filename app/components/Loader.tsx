@@ -280,7 +280,7 @@ export default function Loader({
             <motion.div
               animate={{ opacity: leaving ? 0 : 1 }}
               transition={{ duration: 0.5, ease: "linear" }}
-              className="mt-[4dvh] w-[42vw] max-w-[400px]"
+              className="mt-[4dvh] w-[45vw] max-w-[430px]"
               style={{ color: "var(--color-paper)" }}
             >
               <Logo label="yrsaclicks" className="w-full" />
